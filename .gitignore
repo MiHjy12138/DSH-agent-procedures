@@ -1,0 +1,12 @@
+# 依赖
+node_modules/
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 运行时产物
+*.log
+*.tmp
