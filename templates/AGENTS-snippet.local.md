@@ -2,6 +2,8 @@
 
 各工作区 `procedures/` 存**踩过的坑与解法**，不常驻注入，按需读。项目库在 `procedures/`，中心库在 `procedures/central/`（若存在；否则用 `~/.agent-procedures/cards`）。
 
+- **新会话先检查**：如果当前工作区是项目根（有 `.git` / `package.json` / `pyproject.toml` 等）且没有 `procedures/` 或 `procedures/central/`，先运行 `~/.agent-procedures/scripts/install-workspace.ps1 -Workspace <cwd> -Name <slug>`；不要在家目录/系统目录执行。执行不了就先把命令告诉用户，别假装已经创建。
+
 - **动手前**：任务撞上「网页抓不到正文 / 插件改了不生效」这类现象，先**搜**触发词，别凭记忆答：
   拿任务里的现象词搜 `procedures/*.md`（含 `procedures/central/*.md`）。Windows PowerShell：
   `Get-ChildItem procedures -Recurse -Filter *.md | Select-String -Pattern "<现象词>"`；

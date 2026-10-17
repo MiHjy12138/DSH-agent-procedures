@@ -14,6 +14,7 @@ Last checked: 2026-10-18.
 | Catalog lookup | ✅ | `find-procedures.mjs` returned the project card for a Helldivers 2 query and the central card for a pnpm query. |
 | Project/central split | ✅ | A scaffold project containing a Helldivers 2-specific card kept it in `procedures/`; the central library did not contain the project card. |
 | New-project scaffold | ✅ | `new-project.ps1` created `procedures/`, `procedures/central` junction, `PROJECT.md`, project scope blocks, and `.gitignore` entries. |
+| Bare project + Codex session | ❌ | Codex read the global hook and delegated a task that included `install-workspace`; the shell launch was denied (`CreateProcessAsUserW` error 5), and the fallback executor failed. It created `README.md` but no `procedures/` or `central/`. |
 | POSIX/read-only hook updates | ✅ (text) | The installed hook contains both PowerShell and `grep -rl` examples, and a read-only inbox fallback. Upstream #1/#2 are still open. |
 
 ## What was not run
@@ -57,6 +58,7 @@ node scripts/find-procedures.mjs <workspace> "<symptom>"
 
 ## Known limits
 
+- The “new session first check” is a best-effort hook. A harness can deny the shell launch (as Codex did in the bare-project test) or ignore the instruction; use `new-project.ps1` before the session for a deterministic library, or add a host-level SessionStart hook.
 - Scope is enforced by instructions and review, not by a mandatory linter.
 - The central library is a local junction in each project; it is not committed to project repos.
 - Project creation is a script entry (`new-project.ps1`) or an agent following the global hook;

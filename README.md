@@ -113,6 +113,9 @@ classification prompt in `templates/CLASSIFY.md` is the maintenance procedure.
 
 ## How an agent uses it
 
+0. **New project root?** If `procedures/` or `procedures/central/` is missing, run
+   `install-workspace.ps1` first (or report the exact command if the sandbox blocks it). Do not
+   pretend the library exists.
 1. **Before acting**, take the symptom words from the task and search `procedures/` plus
    `procedures/central/`. Windows PowerShell:
    `Get-ChildItem procedures -Recurse -Filter *.md | Select-String -Pattern "<symptom>"`.
@@ -151,6 +154,7 @@ from card titles, scopes and `> 触发` lines.
 | Claude Code | ⏳ | Global and project `CLAUDE.md` hooks are installed; no Claude session was run on this machine. |
 | Project/central split | ✅ | A scaffold project with a Helldivers 2-specific card kept it project-local; the central library stayed clean. |
 | Catalog lookup | ✅ | `find-procedures` returned the project card for a HD2 query and the central card for a pnpm query. |
+| Bare project + new session | ❌ not automatic | Codex read the global hook and attempted the bootstrap, but its shell launch was denied (`CreateProcessAsUserW` error 5); it finished the file task without a library. Use `new-project.ps1` or a host hook. |
 | `tools/` | ⚠️ DSH-only | `scan-sessions.mjs` / `procedures-probe.mjs` depend on DSH session logs; they do not read Codex/Claude logs out of the box. |
 | Upstream issues | ⚠️ | Upstream #1/#2 cover POSIX commands and read-only inbox behaviour; this repository includes both fixes. No upstream PR yet. |
 

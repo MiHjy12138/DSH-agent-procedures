@@ -104,6 +104,8 @@ Scope 是钩子 + 复查共同维持的约定，不是数据防丢墙。分类�
 
 ## Agent 怎么用
 
+0. **新项目根目录？** 如果 `procedures/` 或 `procedures/central/` 不存在，先运行
+   `install-workspace.ps1`（沙箱拦住了就把准确命令告诉用户）。不要假装库已经存在。
 1. **动手前**：拿任务里的现象词，搜 `procedures/` 和 `procedures/central/`。Windows PowerShell：
    `Get-ChildItem procedures -Recurse -Filter *.md | Select-String -Pattern "<现象词>"`；
    POSIX：`grep -rl "<现象词>" procedures/`。
@@ -139,6 +141,7 @@ node --check scripts/find-procedures.mjs
 | Claude Code | ⏳ | 全局和项目 `CLAUDE.md` 钩子已写入；本机未跑 Claude 会话 |
 | 项目/中心分离 | ✅ | 含绝地潜兵2特定卡的脚手架项目，卡只在项目库；中心库保持干净 |
 | Catalog 检索 | ✅ | HD2 查询返回项目卡；pnpm 查询返回中心卡 |
+| 空白项目 + 新会话 | ❌ 不自动 | Codex 看到了全局钩子并尝试初始化，但 shell 启动被系统拒绝（`CreateProcessAsUserW` error 5）；它只完成了文件任务，没有建库。要走 `new-project.ps1` 或宿主钩子 |
 | `tools/` | ⚠️ 仅 DSH | `scan-sessions.mjs` / `procedures-probe.mjs` 依赖 DSH 会话日志；默认读不了 Codex/Claude |
 | 上游 issue | ⚠️ | 上游 #1/#2 涉及 POSIX 命令和只读 inbox；本仓库已包含这两个修复；尚未向上游开 PR |
 
