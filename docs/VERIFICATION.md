@@ -1,7 +1,7 @@
 # Verification status
 
-Confidence is not uniform across this fork. This file records what was actually run, what was
-only read from source, and what is still a convention rather than a test.
+Confidence is not uniform across this repository. This file records what was actually run, what
+was only read from source, and what is still a convention rather than a test.
 
 Last checked: 2026-10-18.
 
@@ -52,8 +52,8 @@ node scripts/find-procedures.mjs <workspace> "<symptom>"
   calls as hits by default.
 - `tools/README.md` states that both scripts are DSH-specific optional attachments and that the
   core hook/cards do not depend on them.
-- The upstream issues #1 and #2 cover POSIX examples and the read-only inbox conflict. The fork's
-  local hook includes both fixes; upstream has not merged them.
+- The upstream issues #1 and #2 cover POSIX examples and the read-only inbox conflict. This
+  repository's local hook includes both fixes; upstream has not merged them.
 
 ## Known limits
 

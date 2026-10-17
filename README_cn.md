@@ -50,7 +50,7 @@ Agent 会反复踩同一个坑：上下文会结束，文档只写正向流程�
 把中心库克隆到脚本期望的位置：
 
 ```powershell
-git clone https://github.com/Puipipi/DSH-agent-procedures.git ~/.agent-procedures
+git clone https://github.com/MiHjy12138/DSH-agent-procedures.git ~/.agent-procedures
 ```
 
 完整机制放在各 harness 的全局钩子里。安装全局钩子并初始化一个工作区：
@@ -140,7 +140,7 @@ node --check scripts/find-procedures.mjs
 | 项目/中心分离 | ✅ | 含绝地潜兵2特定卡的脚手架项目，卡只在项目库；中心库保持干净 |
 | Catalog 检索 | ✅ | HD2 查询返回项目卡；pnpm 查询返回中心卡 |
 | `tools/` | ⚠️ 仅 DSH | `scan-sessions.mjs` / `procedures-probe.mjs` 依赖 DSH 会话日志；默认读不了 Codex/Claude |
-| 上游 issue | ⚠️ | 上游 #1/#2 涉及 POSIX 命令和只读 inbox；本 fork 已包含这两个修复；尚未向上游开 PR |
+| 上游 issue | ⚠️ | 上游 #1/#2 涉及 POSIX 命令和只读 inbox；本仓库已包含这两个修复；尚未向上游开 PR |
 
 细节与已知限制：[`docs/VERIFICATION.md`](docs/VERIFICATION.md)。
 
@@ -153,10 +153,10 @@ node --check scripts/find-procedures.mjs
 
 ## 上游与来源
 
-Fork 自 [`MiHjy12138/DSH-agent-procedures`](https://github.com/MiHjy12138/DSH-agent-procedures)，
-MIT。核心卡片/钩子机制、模板和 DSH 工具是上游工作。本 fork 增加项目/中心库、scope 钩子、
-POSIX 与只读修复、catalog/finder，以及项目初始化脚本。上游完整中文方法论保留在
-[`docs/METHODOLOGY_cn.md`](docs/METHODOLOGY_cn.md)。
+核心卡片/钩子机制、模板和 DSH 工具来自
+[`MiHjy12138/DSH-agent-procedures`](https://github.com/MiHjy12138/DSH-agent-procedures)，MIT。
+本仓库增加项目/中心库、scope 钩子、POSIX 与只读修复、catalog/finder，以及项目初始化脚本。
+原始完整中文方法论保留在 [`METHODOLOGY_cn.md`](METHODOLOGY_cn.md)。
 
 各 harness 的置信度不同；见上面的验证表。报告结果时请写明 harness、版本，以及钩子是全局加载
 还是只在项目文件里。

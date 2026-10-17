@@ -56,7 +56,7 @@ The distinction is deliberate: a Helldivers 2 weapon hash table belongs in the p
 Clone the central library to the path the scripts expect:
 
 ```powershell
-git clone https://github.com/Puipipi/DSH-agent-procedures.git ~/.agent-procedures
+git clone https://github.com/MiHjy12138/DSH-agent-procedures.git ~/.agent-procedures
 ```
 
 The full mechanism lives in global harness hooks. Install them and bootstrap a workspace:
@@ -152,7 +152,7 @@ from card titles, scopes and `> 触发` lines.
 | Project/central split | ✅ | A scaffold project with a Helldivers 2-specific card kept it project-local; the central library stayed clean. |
 | Catalog lookup | ✅ | `find-procedures` returned the project card for a HD2 query and the central card for a pnpm query. |
 | `tools/` | ⚠️ DSH-only | `scan-sessions.mjs` / `procedures-probe.mjs` depend on DSH session logs; they do not read Codex/Claude logs out of the box. |
-| Upstream issues | ⚠️ | Upstream #1/#2 cover POSIX commands and read-only inbox behaviour; this fork includes both fixes. No upstream PR yet. |
+| Upstream issues | ⚠️ | Upstream #1/#2 cover POSIX commands and read-only inbox behaviour; this repository includes both fixes. No upstream PR yet. |
 
 Details and known limits: [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
 
@@ -167,11 +167,11 @@ Details and known limits: [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
 
 ## Upstream and provenance
 
-Fork of [`MiHjy12138/DSH-agent-procedures`](https://github.com/MiHjy12138/DSH-agent-procedures),
-MIT. The core card/hook mechanism, templates and DSH tools are upstream work. This fork adds
-project/central libraries, the scope hook, the POSIX and read-only fixes, the catalog/finder, and
-the project bootstrap scripts. The full upstream Chinese methodology is preserved at
-[`docs/METHODOLOGY_cn.md`](docs/METHODOLOGY_cn.md).
+The core card/hook mechanism, templates and DSH tools come from
+[`MiHjy12138/DSH-agent-procedures`](https://github.com/MiHjy12138/DSH-agent-procedures), MIT.
+This repository adds project/central libraries, the scope hook, the POSIX and read-only fixes, the
+catalog/finder, and the project bootstrap scripts. The full original Chinese methodology is
+preserved at [`METHODOLOGY_cn.md`](METHODOLOGY_cn.md).
 
 Confidence is not uniform: see the verification table above. If you report a result, name the
 harness, version and whether the hook was loaded globally or only in the project file.

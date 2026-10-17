@@ -1,6 +1,6 @@
 # Project cards + central cards
 
-This fork adds a **two-level experience library** on top of the upstream `agent-procedures` mechanism:
+This repository adds a **two-level experience library** on top of the upstream `agent-procedures` mechanism:
 
 - `procedures/` — project-specific cards (project/game/mod IDs, hash tables, data tables, absolute paths, versions).
 - `procedures/central/` — a junction/symlink to the shared general library (`~/.agent-procedures/cards`).
