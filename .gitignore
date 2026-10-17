@@ -10,3 +10,10 @@ Thumbs.db
 # 运行时产物
 *.log
 *.tmp
+
+# 本机安装记录与本地缓存（不要上传个人路径）
+INSTALLED.md
+.cache/
+
+# 本地 inbox：只在本机整理，不作为共享卡片提交
+cards/_inbox.md
