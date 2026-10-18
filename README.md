@@ -410,7 +410,7 @@ procedures/
   _模板.md
 ```
 
-索引和模板直接复制 `templates/` 下的两份。
+索引和模板直接复制 `templates/` 下的两份。卡攒多了、开始分不清「项目专属」和「通用」时，看 `templates/CLASSIFY.md` 的判据。
 
 ### 2. 挂钩子
 
