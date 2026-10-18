@@ -64,9 +64,30 @@ procedures/
 不调用模型、不读 skill、不消耗 token；只检查文件是否存在，存在就跳过、不覆盖。
 第一次打开“经验库”或切换项目时也会再兜底检查当前项目。
 
+## 非 DSH 初始化
+
+Codex / Claude Code 或其他 agent 不需要 DSH 插件，也不需要 skill。项目里跑一次：
+
+```powershell
+node workbench/cli.mjs init --workspace .
+```
+
+幂等：只补 `procedures/_inbox.md`、`_layers.md`、`_模板.md`；已有内容不覆盖。
+之后它们可以直接用同一个 CLI：
+
+```powershell
+node workbench/cli.mjs search "现象"
+node workbench/cli.mjs show 抓取-网页空壳.md
+node workbench/cli.mjs inbox --add "现象：一句话"
+```
+
+Claude Code 可以在 `SessionStart` hook 里调用一次 `init`；Codex 更适合放在项目模板/启动脚本里。
+两者都不需要每轮读 skill，也不产生模型 token。
+
 ## CLI
 
 ```powershell
+node workbench/cli.mjs init --workspace .
 node workbench/cli.mjs search "网页抓不到正文：为什么只有 SPA 空壳？" --limit 5
 node workbench/cli.mjs show 抓取-网页空壳.md
 node workbench/cli.mjs audit
@@ -119,6 +140,7 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 node workbench/test.mjs        # lib 搜索/分层/审计
 node workbench/test-api.mjs    # 保存冲突/原子写/分层/审计 API
 node workbench/test-plugin.mjs # prefix 路由 + slot + 项目隔离 + 新工作区自动建库
+node workbench/test-init.mjs   # 跨 agent CLI init 幂等性
 ```
 
 可选 UI 回归（需要本机 Edge + Playwright）：

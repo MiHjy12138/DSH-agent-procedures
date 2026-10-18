@@ -13,6 +13,7 @@
   "files": [
     "plugin",
     "lib.mjs",
+    "init.mjs",
     "public",
     "tools",
     "templates",
@@ -32,7 +33,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node test.mjs && node test-api.mjs && node test-plugin.mjs"
+    "test": "node test.mjs && node test-api.mjs && node test-plugin.mjs && node test-init.mjs"
   },
   "license": "MIT"
 }

@@ -2,6 +2,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLibrary } from './lib.mjs';
+import { ensureProjectLibrary } from './init.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..');
@@ -33,6 +34,7 @@ function help() {
   node workbench/cli.mjs show <文件名>
   node workbench/cli.mjs audit [--json]
   node workbench/cli.mjs inbox [--add "一行"]
+  node workbench/cli.mjs init [--workspace <repo>] [--json]
 
 环境：
   --workspace <repo>   含 procedures/ 的仓库，默认当前目录
@@ -44,6 +46,21 @@ function help() {
 
 if (!command || command === '--help' || command === '-h') {
   help();
+  process.exit(0);
+}
+
+if (command === 'init') {
+  const result = ensureProjectLibrary(workspace);
+  if (result.error) {
+    console.error(result.error);
+    process.exit(2);
+  }
+  if (json) {
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(0);
+  }
+  console.log(`${result.created ? 'created' : 'exists'}: ${result.proceduresDir}`);
+  console.log(result.written.length ? `wrote: ${result.written.join(', ')}` : 'already initialized; nothing overwritten');
   process.exit(0);
 }
 
