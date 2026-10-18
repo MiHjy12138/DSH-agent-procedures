@@ -308,6 +308,8 @@ kbd {
   font-size: 11px;
 }
 .meta-row strong { color: var(--text); font-weight: 600; }
+.meta-row .select { height: 25px; padding: 0 4px; font-size: 10.5px; margin-left: 3px; }
+.field select.select { width: 100%; height: 36px; }
 
 /* markdown */
 .markdown {

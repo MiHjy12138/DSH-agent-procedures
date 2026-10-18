@@ -47,11 +47,11 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ## 界面
 
 - 左侧搜索/筛选/列表，右侧 Markdown 预览；
-- 新建卡片：触发现象 + 首选 + 死路 + 验证；
-- 编辑：原文 Markdown，保存到 `procedures/`；
+- 新建卡片：触发现象 + 首选 + 死路 + 验证 + 层（fixed/env/task）；
+- 编辑：原文 Markdown，保存到 `procedures/`；外部修改会检测冲突，不覆盖；
 - 审计：复用 `tools/procedures-audit.mjs`，显示 P0/P1；
 - 收件箱：先记一行，稍后整理成卡；
-- 快捷键：`/` 搜索、`N` 新建、`E` 编辑、`Ctrl/⌘+S` 保存、`Esc` 取消/关闭。
+- 快捷键：`/` 搜索、`N` 新建、`E` 编辑、`J/K` 上下切换、`Ctrl/⌘+S` 保存、`Esc` 取消/关闭。
 
 ## 边界
 

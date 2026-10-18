@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLibrary } from './lib.mjs';
@@ -62,4 +64,20 @@ test('template contains required sections', () => {
   const template = lib.template();
   assert.match(template, /触发/);
   assert.match(template, /别再来/);
+});
+
+test('setLayer updates _layers.md and parsed layer', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'exp-lib-'));
+  try {
+    fs.cpSync(proceduresDir, temp, { recursive: true });
+    const tempLib = createLibrary(temp, repoRoot);
+    tempLib.setLayer('抓取-网页空壳', 'env');
+    assert.equal(tempLib.get('抓取-网页空壳.md').layer, 'env');
+    tempLib.setLayer('抓取-网页空壳', 'task');
+    assert.equal(tempLib.get('抓取-网页空壳.md').layer, 'task');
+    tempLib.setLayer('抓取-网页空壳', '');
+    assert.equal(tempLib.get('抓取-网页空壳.md').layer, '');
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
 });

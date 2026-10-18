@@ -78,6 +78,12 @@ function readBody(req) {
   });
 }
 
+function writeAtomic(file, content) {
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
+  fs.writeFileSync(temp, content, 'utf8');
+  fs.renameSync(temp, file);
+}
+
 function sendStatic(res, name) {
   const file = path.join(publicDir, name);
   if (!fs.existsSync(file)) {
@@ -131,7 +137,15 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const { full, rel } = safeCardPath(body.file);
       if (!fs.existsSync(full)) return sendJson(res, 404, { error: 'card not found' });
-      fs.writeFileSync(full, String(body.content ?? ''), 'utf8');
+      const current = fs.readFileSync(full, 'utf8');
+      if (body.previousContent !== undefined && String(body.previousContent) !== current) {
+        return sendJson(res, 409, {
+          error: '文件已被外部修改，未保存；请刷新后重试',
+          current,
+        });
+      }
+      writeAtomic(full, String(body.content ?? ''));
+      if (body.layer !== undefined) lib.setLayer(rel.replace(/\.md$/, ''), body.layer);
       return sendJson(res, 200, lib.get(rel));
     }
 
@@ -140,8 +154,17 @@ const server = http.createServer(async (req, res) => {
       const name = safeNewName(body.file);
       const full = path.join(proceduresDir, name);
       if (fs.existsSync(full)) return sendJson(res, 409, { error: '文件已存在' });
-      fs.writeFileSync(full, String(body.content ?? ''), 'utf8');
+      writeAtomic(full, String(body.content ?? ''));
+      if (body.layer) lib.setLayer(name.replace(/\.md$/, ''), body.layer);
       return sendJson(res, 201, lib.get(name));
+    }
+
+    if (req.method === 'POST' && p === '/api/layer') {
+      const body = await readBody(req);
+      const { full, rel } = safeCardPath(body.file);
+      if (!fs.existsSync(full)) return sendJson(res, 404, { error: 'card not found' });
+      lib.setLayer(rel.replace(/\.md$/, ''), body.layer);
+      return sendJson(res, 200, lib.get(rel));
     }
 
     if (req.method === 'GET' && p === '/api/inbox') {

@@ -326,11 +326,38 @@ export function createLibrary(proceduresDir, repoRoot) {
     };
   }
 
+  function setLayer(name, layer) {
+    const clean = String(name ?? '').replace(/\.md$/, '').trim();
+    if (!clean) throw new Error('缺少卡名');
+    const next = String(layer ?? '').trim();
+    if (!['', 'fixed', 'env', 'task'].includes(next)) throw new Error('层只能是 fixed/env/task');
+    const file = path.join(root, '_layers.md');
+    let text = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+    if (!text.trim()) text = '| 卡 | 层 |\n| --- | --- |\n';
+    const lines = text.split(/\r?\n/);
+    const out = [];
+    let found = false;
+    for (const line of lines) {
+      if (line.trim().startsWith('|')) {
+        const cells = line.split('|').map((s) => s.trim()).filter(Boolean);
+        const isHeader = cells[0] === '卡' || /^-+$/.test(cells[0] ?? '');
+        if (!isHeader && cells.length >= 2 && cells[0] === clean) {
+          found = true;
+          if (next) out.push(`| ${clean} | ${next} |`);
+          continue;
+        }
+      }
+      out.push(line);
+    }
+    if (!found && next) out.push(`| ${clean} | ${next} |`);
+    fs.writeFileSync(file, `${out.join('\n').replace(/\n+$/, '')}\n`, 'utf8');
+  }
+
   function template() {
     const file = path.join(repoRoot, 'templates', 'card-template.md');
     if (fs.existsSync(file)) return fs.readFileSync(file, 'utf8');
     return `# <分类>-<现象>\n\n> **触发**：<任务里会出现的现象>\n> **验证**：<怎么确认这次真的成了>\n\n## 首选\n\n<可直接复制的那一条>\n\n## 被挡时\n\n<兜底>\n\n## 别再来\n\n| 弯路 | 为什么不通 |\n| --- | --- |\n| <试过并失败的> | <报错原文 / 为什么不成立> |\n\n## 注意\n\n- <为什么会错>\n\n证据：<会话 id / commit / 文件路径>\n`;
   }
 
-  return { proceduresDir: root, repoRoot, all, get, search, inbox, appendInbox, audit, template, layers };
+  return { proceduresDir: root, repoRoot, all, get, search, inbox, appendInbox, audit, setLayer, template, layers };
 }

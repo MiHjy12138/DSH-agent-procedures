@@ -19,7 +19,11 @@ async function api(path, options = {}) {
     ...options,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `请求失败 (${res.status})`);
+  if (!res.ok) {
+    const error = new Error(data.error || `请求失败 (${res.status})`);
+    error.data = data;
+    throw error;
+  }
   return data;
 }
 
@@ -228,7 +232,32 @@ function renderCard() {
     <span><strong>文件</strong> <code>${escapeHtml(card.file)}</code></span>
     <span><strong>更新</strong> ${relativeTime(card.updated)}</span>
     <span><strong>大小</strong> ${formatBytes(card.bytes)}</span>
+    <span><strong>层</strong>
+      <select id="card-layer" class="select">
+        <option value="">未分层</option>
+        <option value="fixed">fixed</option>
+        <option value="env">env</option>
+        <option value="task">task</option>
+      </select>
+    </span>
   `;
+  const layerSelect = $('card-layer');
+  layerSelect.value = card.layer || '';
+  layerSelect.addEventListener('change', async () => {
+    try {
+      const updated = await api('/api/layer', {
+        method: 'POST',
+        body: JSON.stringify({ file: card.file, layer: layerSelect.value }),
+      });
+      state.card = updated;
+      renderCard();
+      await loadCards();
+      toast('层已更新');
+    } catch (error) {
+      toast(error.message);
+      layerSelect.value = card.layer || '';
+    }
+  });
   $('card-preview').innerHTML = renderMarkdown(card.raw.replace(/^#\s+.+\r?\n?/, ''));
   $('card-preview').classList.remove('hidden');
   $('edit-wrap').classList.add('hidden');
@@ -261,23 +290,42 @@ function cancelEdit() {
 async function saveEdit() {
   if (!state.editing || !state.card) return;
   const content = $('editor').value;
-  const updated = await api('/api/card', {
-    method: 'PUT',
-    body: JSON.stringify({ file: state.card.file, content }),
-  });
-  state.card = updated;
-  state.editing = false;
-  state.dirty = false;
-  renderCard();
-  await loadCards();
-  await loadState();
-  toast('已保存');
+  try {
+    const updated = await api('/api/card', {
+      method: 'PUT',
+      body: JSON.stringify({
+        file: state.card.file,
+        content,
+        previousContent: state.card.raw,
+      }),
+    });
+    state.card = updated;
+    state.editing = false;
+    state.dirty = false;
+    renderCard();
+    await loadCards();
+    await loadState();
+    toast('已保存');
+  } catch (error) {
+    if (error.data?.current !== undefined) {
+      const refresh = confirm('文件已被外部修改，未保存。刷新到磁盘版本？');
+      if (refresh) {
+        await selectCard(state.card.file);
+        toast('已刷新');
+      } else {
+        $('dirty').textContent = '未保存：磁盘已变化';
+      }
+      return;
+    }
+    toast(error.message);
+  }
 }
 
 function openNew(prefill = '') {
   state.newFileTouched = false;
   $('new-file').value = '';
   $('new-trigger').value = prefill;
+  $('new-layer').value = '';
   $('new-preferred').value = '';
   $('new-fallback').value = '';
   $('new-deadend').value = '';
@@ -353,7 +401,7 @@ async function createCard() {
     const file = $('new-file').value.trim();
     const created = await api('/api/card', {
       method: 'POST',
-      body: JSON.stringify({ file, content }),
+      body: JSON.stringify({ file, content, layer: $('new-layer').value }),
     });
     closeNew();
     await loadCards();
@@ -553,7 +601,14 @@ function bind() {
       return;
     }
     if (typing) return;
-    if (event.key === '/') {
+    if (event.key === 'j' || event.key === 'k') {
+      if (!state.cards.length) return;
+      event.preventDefault();
+      const current = state.cards.findIndex((card) => card.file === state.selected);
+      const step = event.key === 'j' ? 1 : -1;
+      const next = state.cards[Math.min(state.cards.length - 1, Math.max(0, (current < 0 ? 0 : current) + step))];
+      if (next) selectCard(next.file);
+    } else if (event.key === '/') {
       event.preventDefault();
       $('search').focus();
     } else if (event.key.toLowerCase() === 'n') {

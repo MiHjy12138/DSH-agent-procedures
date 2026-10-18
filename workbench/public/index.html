@@ -129,6 +129,15 @@
           <input id="new-trigger" type="text" placeholder="任务描述里真的会出现的词" />
         </label>
         <label class="field">
+          <span>层</span>
+          <select id="new-layer" class="select">
+            <option value="">暂不分层</option>
+            <option value="fixed">fixed — 原理/语法</option>
+            <option value="env">env — 版本/路径</option>
+            <option value="task">task — 任务型</option>
+          </select>
+        </label>
+        <label class="field">
           <span>首选做法</span>
           <textarea id="new-preferred" rows="2" placeholder="可直接复制的命令 / 参数 / 路径"></textarea>
         </label>
