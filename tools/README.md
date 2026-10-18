@@ -53,6 +53,29 @@ node tools/procedures-audit.mjs --max-bytes 3072 --stale-days 90
 
 ---
 
+## `procedures-review.mjs` —— 卡库使用情况评审
+
+```bash
+node tools/procedures-review.mjs --procedures path/to/procedures
+node tools/procedures-review.mjs --procedures ... --days 30     # 强制统一阈值
+node tools/procedures-review.mjs --procedures ... --grace 0     # 关掉新建卡宽限
+node tools/procedures-review.mjs --procedures ... --include-results   # 结果里出现卡名也算被读
+node tools/procedures-review.mjs --procedures ... --json
+```
+
+它回答的是**动态**问题：这张卡最近有没有被用过、按分层该不该复核。静态问题（结构/断链/体积）交给 `procedures-audit.mjs`。
+
+- 读 `_layers.md` 的「卡 | 层」表，按层给复核期：`fixed` 永不复核 / `env` 90 天 / `task` 180 天。
+- **宽限期 7 天**：新建的卡还没机会被用，不提名（`--grace 0` 可关）。
+- **口径**：只统计 `read/grep/glob` 等读取类工具里出现卡名；`write/edit` 是在产卡、不算触发；**列目录看文件名挑卡天然不计入**。所以「从没被整篇读过」≠「没用」—— 它可能一直靠卡名当索引起用。
+- `--include-results` 会把 `tool/result` 里出现卡名也算一次（那次读取真的取到了内容，证据更硬）。
+
+**依赖**：读 DSH 的会话日志（`session.v*.jsonl.zstd`，多帧 zstd），所以**只适用于 DSH**，和 `scan-sessions.mjs` 同一条失效边界。不想读会话时，只用 `procedures-audit.mjs` 也能维持卡库健康。
+
+**同样只出清单，不删卡。**
+
+---
+
 ## 会话根目录怎么找（两个脚本共用同一套逻辑）
 
 按下面的顺序逐个候选，**命中即用**；某个候选不成立就自动降级到下一个：
