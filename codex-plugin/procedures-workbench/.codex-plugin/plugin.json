@@ -1,6 +1,6 @@
 {
   "name": "procedures-workbench",
-  "version": "0.1.0+codex.20261018062038",
+  "version": "0.1.0+codex.20261018063456",
   "description": "\u5728 Codex \u4e2d\u901a\u8fc7 MCP \u5de5\u5177\u67e5\u770b\u3001\u641c\u7d22\u5f53\u524d\u9879\u76ee\u7684 procedures/ \u7ecf\u9a8c\u5361\uff1b\u4e0d\u81ea\u52a8\u6355\u83b7\u3001\u4e0d\u8bfb\u5165\u6574\u5e93\u3002",
   "author": {
     "name": "Local developer"

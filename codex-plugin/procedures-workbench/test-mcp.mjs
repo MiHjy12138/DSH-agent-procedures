@@ -48,7 +48,7 @@ test('MCP server lists, initializes, and reads cards', async () => {
     assert.equal(init.result.serverInfo.name, 'procedures-workbench');
     client.notify('notifications/initialized');
     const list = await client.request('tools/list');
-    assert.equal(list.result.tools.length, 5);
+    assert.equal(list.result.tools.length, 6);
     assert.ok(list.result.tools.some((tool) => tool.name === 'procedures_search'));
 
     const created = await client.request('tools/call', {

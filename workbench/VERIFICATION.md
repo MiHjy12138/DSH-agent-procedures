@@ -40,8 +40,10 @@
 - 重复执行 `ensureProjectLibrary` 不覆盖用户改过的 `_inbox.md`；
 - `node workbench/cli.mjs init --workspace .` 已可用于 Codex/Claude Code，不依赖 DSH；
 - Codex 插件 `codex-plugin/procedures-workbench` 通过 `validate_plugin.py`；
-- Codex 插件已改为 **MCP stdio server**，工具：`procedures_list/search/get/inbox/init`；
-- MCP 测试通过：initialize、tools/list、init 建骨架、list、get；
+- Codex 插件已改为 **MCP stdio server**，工具：`procedures_open`、`list/search/get/inbox/init`；
+- 增加 MCP Apps 侧边栏 UI：`mcp/mcp-app.html.br`，按 `ui/initialize` / `tools/call` 连接；
+- 用 mock host 验证：侧边栏列表渲染、点击卡片读取详情；
+- MCP 测试通过：initialize、tools/list（6 个工具）、init 建骨架、list、get；
 - 不再启动 Browser，也不需要手动打开页面。
 
 ## UI 回归

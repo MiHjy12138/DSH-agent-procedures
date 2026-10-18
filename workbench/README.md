@@ -46,7 +46,8 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 `codex-plugin/procedures-workbench/` 是一个 Codex MCP 插件：
 
 - 本地 stdio MCP server；
-- `procedures_list` / `procedures_search` / `procedures_get` / `procedures_inbox` / `procedures_init`；
+- `mcp/mcp-app.html.br` 是 MCP Apps 侧边栏 UI（`ui/initialize` + `tools/call`）；
+- `procedures_open` / `procedures_list` / `procedures_search` / `procedures_get` / `procedures_inbox` / `procedures_init`；
 - 不启动 Browser、不需要手动开页面；
 - 工具接受 `project_root`，默认从 `CODEX_PROJECT_ROOT` / `CLAUDE_PROJECT_DIR` / `INIT_CWD` / cwd 取；
 - MCP server 的 cwd 是插件目录时会要求显式传项目根，避免在插件目录误建库。

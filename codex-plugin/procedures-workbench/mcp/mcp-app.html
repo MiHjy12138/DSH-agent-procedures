@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>项目经验库</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f6f7f9; --panel:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb; --accent-soft:#eff6ff; --warn:#b45309; --mark:#fef3c7; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#111318; --panel:#181b22; --text:#f3f4f6; --muted:#9ca3af; --line:#2b303a; --accent:#7aa2ff; --accent-soft:#17233d; --warn:#fbbf24; --mark:#4d3a12; } }
+    * { box-sizing: border-box; }
+    html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+    body { overflow:hidden; }
+    #root { display:flex; flex-direction:column; height:100%; }
+    header { padding:14px 16px 10px; border-bottom:1px solid var(--line); background:var(--panel); }
+    h1 { margin:0 0 8px; font-size:18px; letter-spacing:-.02em; }
+    .path-row { display:flex; gap:8px; }
+    .path-row input { flex:1; min-width:0; padding:7px 9px; border:1px solid var(--line); border-radius:7px; background:var(--bg); color:var(--text); font:12px/1.4 ui-monospace,monospace; }
+    button { border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:7px; padding:7px 10px; font:inherit; cursor:pointer; }
+    button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    button:hover { border-color:var(--accent); }
+    .toolbar { display:flex; gap:8px; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
+    .toolbar input { flex:1; min-width:0; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; }
+    main { flex:1; min-height:0; display:grid; grid-template-columns:minmax(220px,42%) minmax(0,1fr); }
+    .list { overflow:auto; border-right:1px solid var(--line); background:var(--panel); }
+    .list-empty { padding:24px 16px; color:var(--muted); font-size:12px; }
+    .item { display:block; width:100%; text-align:left; padding:10px 12px; border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; }
+    .item.active { background:var(--accent-soft); }
+    .item strong { display:block; font-size:12.5px; }
+    .item small { display:block; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta-line { display:flex; gap:6px; align-items:center; margin-bottom:2px; color:var(--muted); font-size:10px; }
+    .pill { border:1px solid var(--line); border-radius:99px; padding:1px 6px; white-space:nowrap; }
+    .detail { overflow:auto; padding:18px 20px 32px; }
+    .detail h2 { margin:0 0 4px; font-size:17px; }
+    .detail .path { color:var(--muted); font:11px/1.4 ui-monospace,monospace; margin-bottom:12px; }
+    .detail pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:14px; border:1px solid var(--line); border-radius:9px; background:var(--panel); font:12px/1.6 ui-monospace,monospace; }
+    .hint { color:var(--muted); font-size:11.5px; }
+    .error { margin:12px; padding:10px 12px; border:1px solid #fecdca; border-radius:8px; background:#fef2f2; color:#b42318; white-space:pre-wrap; }
+    @media (max-width:620px) { main { grid-template-columns:1fr; } .list { max-height:40vh; border-right:0; border-bottom:1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <header>
+      <h1>项目经验库</h1>
+      <div class="path-row">
+        <input id="project" placeholder="项目根目录，例如 C:\work\my-project" />
+        <button id="load" class="primary">加载</button>
+      </div>
+      <div id="project-path" class="hint"></div>
+    </header>
+    <div class="toolbar">
+      <input id="search" placeholder="搜现象、报错、路径、命令…" />
+      <button id="inbox">收件箱</button>
+    </div>
+    <main>
+      <div id="list" class="list"><div class="list-empty">连接后加载当前项目。</div></div>
+      <div id="detail" class="detail"><div class="hint">从左边选一张卡。</div></div>
+    </main>
+    <div id="error" class="error" hidden></div>
+  </div>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const state = { project: '', cards: [], selected: '', search: '', booted: false };
+      const pending = new Map();
+      let nextId = 1;
+
+      function parentPost(message) {
+        window.parent.postMessage(message, '*');
+      }
+
+      function request(method, params) {
+        return new Promise((resolve, reject) => {
+          const id = nextId++;
+          pending.set(id, { resolve, reject });
+          parentPost({ jsonrpc: '2.0', id, method, params });
+          setTimeout(() => {
+            if (!pending.has(id)) return;
+            pending.delete(id);
+            reject(new Error('MCP host did not respond'));
+          }, 15000);
+        });
+      }
+
+      async function callTool(name, args) {
+        const result = await request('tools/call', { name, arguments: args });
+        if (result?.isError) {
+          throw new Error(result.content?.[0]?.text || 'tool failed');
+        }
+        return result?.structuredContent ?? result?.content?.[0]?.text ?? result;
+      }
+
+      function showError(error) {
+        $('error').textContent = String(error?.message || error);
+        $('error').hidden = false;
+      }
+
+      function clearError() { $('error').hidden = true; }
+
+      function layerName(layer) {
+        return ({ fixed: '原理', env: '环境', task: '任务' })[layer] || (layer || '未设置');
+      }
+
+      function renderList() {
+        const list = $('list');
+        list.innerHTML = '';
+        if (!state.cards.length) {
+          const empty = document.createElement('div');
+          empty.className = 'list-empty';
+          empty.textContent = state.project ? '没有匹配的卡片。' : '先加载项目。';
+          list.appendChild(empty);
+          return;
+        }
+        for (const card of state.cards) {
+          const button = document.createElement('button');
+          button.className = `item${state.selected === card.file ? ' active' : ''}`;
+          button.innerHTML = `
+            <div class="meta-line"><span class="pill">${escapeHtml(layerName(card.layer))}</span>${card.updated ? `<span>${new Date(card.updated).toLocaleDateString()}</span>` : ''}</div>
+            <strong>${escapeHtml(card.title || card.name)}</strong>
+            <small>${escapeHtml(card.trigger || card.file)}</small>
+          `;
+          button.addEventListener('click', () => openCard(card.file));
+          list.appendChild(button);
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+      }
+
+      async function loadProject(root) {
+        state.project = String(root || '').trim();
+        if (!state.project) return;
+        clearError();
+        $('project').value = state.project;
+        $('project-path').textContent = state.project;
+        localStorage.setItem('procedures-workbench-project', state.project);
+        await loadCards();
+      }
+
+      async function loadCards() {
+        if (!state.project) return;
+        try {
+          const data = await callTool('procedures_list', {
+            project_root: state.project,
+            ...(state.search ? { } : {}),
+          });
+          let cards = data.cards || [];
+          if (state.search) {
+            const result = await callTool('procedures_search', { project_root: state.project, query: state.search, limit: 50 });
+            cards = result.matches || [];
+          }
+          state.cards = cards;
+          renderList();
+          $('project-path').textContent = data.procedures_dir || state.project;
+        } catch (error) {
+          state.cards = [];
+          renderList();
+          showError(error);
+        }
+      }
+
+      async function openCard(file) {
+        try {
+          const card = await callTool('procedures_get', { project_root: state.project, file });
+          state.selected = file;
+          renderList();
+          $('detail').innerHTML = '';
+          const title = document.createElement('h2');
+          title.textContent = card.title || file;
+          const path = document.createElement('div');
+          path.className = 'path';
+          path.textContent = `${file}${card.layer ? ` · ${layerName(card.layer)}` : ''}`;
+          const pre = document.createElement('pre');
+          pre.textContent = card.raw || '';
+          $('detail').append(title, path, pre);
+        } catch (error) {
+          showError(error);
+        }
+      }
+
+      function connect() {
+        window.addEventListener('message', (event) => {
+          const message = event.data;
+          if (!message || typeof message !== 'object') return;
+          if (message.id !== undefined && pending.has(message.id)) {
+            const waiter = pending.get(message.id);
+            pending.delete(message.id);
+            if (message.error) waiter.reject(new Error(message.error.message || 'MCP error'));
+            else waiter.resolve(message.result);
+            return;
+          }
+          if (message.method === 'ui/notifications/tool-input') {
+            const root = message.params?.arguments?.project_root;
+            if (root) loadProject(root).catch(showError);
+          }
+        });
+
+        request('ui/initialize', {
+          appInfo: { name: 'Procedures Workbench', version: '0.1.0' },
+          appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] },
+          protocolVersion: '2025-11-21',
+        }).then(() => {
+          parentPost({ jsonrpc: '2.0', method: 'ui/notifications/initialized' });
+          state.booted = true;
+          const saved = localStorage.getItem('procedures-workbench-project');
+          if (saved) loadProject(saved).catch(showError);
+        }).catch(showError);
+      }
+
+      $('load').addEventListener('click', () => loadProject($('project').value).catch(showError));
+      $('project').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') loadProject($('project').value).catch(showError);
+      });
+      $('search').addEventListener('input', () => {
+        state.search = $('search').value.trim();
+        clearTimeout($('search')._timer);
+        $('search')._timer = setTimeout(() => loadCards(), 180);
+      });
+      $('inbox').addEventListener('click', async () => {
+        if (!state.project) return;
+        try {
+          const data = await callTool('procedures_inbox', { project_root: state.project });
+          $('detail').innerHTML = '';
+          const title = document.createElement('h2');
+          title.textContent = '收件箱';
+          const pre = document.createElement('pre');
+          pre.textContent = (data.items || []).map((item) => `${item.id}\t${item.text}`).join('\n') || '收件箱是空的。';
+          $('detail').append(title, pre);
+        } catch (error) { showError(error); }
+      });
+
+      connect();
+    })();
+  </script>
+</body>
+</html>
