@@ -14,6 +14,32 @@ node workbench/server.mjs --procedures workbench/fixtures/procedures
 
 打开输出的 `http://127.0.0.1:4177`。可选 `--port 4180`、`--host`。
 
+## DSH 插件
+
+`workbench/` 同时是一个 DSH 插件包（`dsh.bundle.patch` + `dsh.client.platform=web`）。
+安装后在 DSH 侧边栏出现“经验库”，页面同源挂载
+`/plugins/experience-workbench/`，不需要另起 4177。
+
+本地开发安装（桌面/Web profile 都可以）：
+
+```powershell
+dsh plugin --profile desktop add link:C:\path\to\workbench
+# 或 --profile web
+```
+
+装完重启 DSH。插件配置在 `cordis.patch.yml`：
+
+```yaml
+- insert:
+    - id: experience-workbench
+      name: dsh-experience-workbench
+      config:
+        proceduresDir: "C:\path\to\project\procedures"
+```
+
+`proceduresDir` 留空时：优先当前工作目录的 `procedures/`，再退到包内
+`fixtures/procedures/` 演示数据。插件不跨项目、不写回、不接外部记忆。
+
 ## CLI
 
 ```powershell
@@ -64,8 +90,9 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ## 测试
 
 ```powershell
-node workbench/test.mjs       # lib 搜索/分层/审计
-node workbench/test-api.mjs   # 保存冲突/原子写/分层/审计 API
+node workbench/test.mjs        # lib 搜索/分层/审计
+node workbench/test-api.mjs    # 保存冲突/原子写/分层/审计 API
+node workbench/test-plugin.mjs # DSH 插件 prefix 路由 + 客户端 slot 注册
 ```
 
 可选 UI 回归（需要本机 Edge + Playwright）：

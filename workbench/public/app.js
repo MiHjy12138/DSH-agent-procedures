@@ -163,7 +163,7 @@ function badge(text, cls = '') {
 }
 
 async function loadState() {
-  const data = await api('/api/state');
+  const data = await api('api/state');
   $('workspace').textContent = data.proceduresDir;
   $('stat').textContent = `${data.cards} 张卡 · ${formatBytes(data.bytes)}`;
 }
@@ -256,7 +256,7 @@ function indexAudit(audit) {
 
 async function loadAudit() {
   try {
-    const audit = await api('/api/audit', { method: 'POST' });
+    const audit = await api('api/audit', { method: 'POST' });
     state.audit = audit;
     state.auditByCard = indexAudit(audit);
     renderList();
@@ -316,7 +316,7 @@ function renderCard() {
   layerSelect.value = card.layer || '';
   layerSelect.addEventListener('change', async () => {
     try {
-      const updated = await api('/api/layer', {
+      const updated = await api('api/layer', {
         method: 'POST',
         body: JSON.stringify({ file: card.file, layer: layerSelect.value }),
       });
@@ -366,7 +366,7 @@ async function saveEdit() {
   if (!state.editing || !state.card) return;
   const content = $('editor').value;
   try {
-    const updated = await api('/api/card', {
+    const updated = await api('api/card', {
       method: 'PUT',
       body: JSON.stringify({
         file: state.card.file,
@@ -479,7 +479,7 @@ async function createCard() {
   try {
     const content = buildCardContent();
     const file = $('new-file').value.trim();
-    const created = await api('/api/card', {
+    const created = await api('api/card', {
       method: 'POST',
       body: JSON.stringify({ file, content, layer: $('new-layer').value }),
     });
@@ -501,7 +501,7 @@ async function openInbox() {
 }
 
 async function loadInbox() {
-  const data = await api('/api/inbox');
+  const data = await api('api/inbox');
   state.inbox = data.items;
   renderInbox();
 }
@@ -534,7 +534,7 @@ async function addInbox() {
   const text = input.value.trim();
   if (!text) return;
   try {
-    const data = await api('/api/inbox', { method: 'POST', body: JSON.stringify({ text }) });
+    const data = await api('api/inbox', { method: 'POST', body: JSON.stringify({ text }) });
     state.inbox = data.items;
     input.value = '';
     renderInbox();
@@ -553,7 +553,7 @@ async function openAudit() {
   $('audit-sub').textContent = '运行中…';
   $('audit-body').innerHTML = '<div class="audit-empty">正在检查卡片…</div>';
   try {
-    const audit = await api('/api/audit', { method: 'POST' });
+    const audit = await api('api/audit', { method: 'POST' });
     state.audit = audit;
     state.auditByCard = indexAudit(audit);
     renderList();

@@ -16,7 +16,16 @@
 - CLI `search pnpm 安装报 ERR_PNPM_NO_MATCHING_VERSION`：只命中
   `工具-pnpm版本不存在.md`；
 - `node workbench/test.mjs`：10 tests / 10 pass / 0 fail；
-- `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail。
+- `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail；
+- `node workbench/test-plugin.mjs`：2 tests / 2 pass / 0 fail（prefix 路由 + 客户端 slot 注册）。
+
+## DSH 插件
+
+- `workbench/package.json` 增加 `dsh.bundle.patch` 与 `dsh.client.platform=web`；
+- 服务端挂载到 `ctx.webServer`：`/plugins/experience-workbench/`；
+- 客户端注册 `sidebar.panellist`（经验库）与 `main`（iframe 工作台）；
+- 已用 `dsh plugin --profile desktop add link:<workbench>` 链接进 desktop profile；
+- 本次验证未重启 DSH，因此“重启后真实侧边栏/iframe 目测”仍待完成。
 
 ## UI 回归
 

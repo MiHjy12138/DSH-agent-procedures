@@ -1,0 +1,38 @@
+{
+  "name": "dsh-experience-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "项目本地经验库工作台：DSH 侧边栏页面 + 同源 Web UI + procedures/ 卡片读写",
+  "type": "module",
+  "main": "./plugin/index.js",
+  "exports": {
+    ".": "./plugin/index.js",
+    "./client": "./plugin/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "plugin",
+    "lib.mjs",
+    "public",
+    "tools",
+    "templates",
+    "fixtures",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test.mjs && node test-api.mjs && node test-plugin.mjs"
+  },
+  "license": "MIT"
+}

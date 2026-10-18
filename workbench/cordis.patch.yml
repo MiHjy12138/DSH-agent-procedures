@@ -1,0 +1,12 @@
+# DSH bundle patch：安装后把经验库工作台插入 profile 配置树。
+# 本地开发安装（desktop/web 均可，装完重启 DSH）：
+#   dsh plugin --profile desktop add link:<workbench 绝对路径>
+#   dsh plugin --profile web add link:<workbench 绝对路径>
+- insert:
+    - id: experience-workbench
+      name: dsh-experience-workbench
+      config:
+        # 留空：优先当前工作目录的 procedures/，否则用包内 fixtures 演示数据。
+        # 实际项目建议显式指向项目根：
+        # proceduresDir: "C:\\path\\to\\project\\procedures"
+        proceduresDir: ""
