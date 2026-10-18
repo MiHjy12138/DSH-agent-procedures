@@ -124,7 +124,15 @@ const server = http.createServer(async (req, res) => {
       const q = url.searchParams.get('q') ?? '';
       const layer = url.searchParams.get('layer') ?? '';
       const data = lib.search(q, { layer, limit: 100 });
-      return sendJson(res, 200, { q, layer, count: data.count, cards: data.cards });
+      return sendJson(res, 200, {
+        q,
+        layer,
+        count: data.count,
+        cards: data.cards,
+        terms: data.terms,
+        handles: data.handles,
+        phrases: data.phrases,
+      });
     }
 
     if (req.method === 'GET' && p === '/api/card') {

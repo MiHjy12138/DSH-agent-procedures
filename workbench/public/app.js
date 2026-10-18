@@ -9,6 +9,9 @@ const state = {
   q: '',
   layer: '',
   audit: null,
+  auditByCard: new Map(),
+  searchMeta: { terms: [], handles: [], phrases: [] },
+  draft: null,
   inbox: [],
   newFileTouched: false,
 };
@@ -176,15 +179,18 @@ function renderList() {
   }
   empty.classList.add('hidden');
   for (const card of state.cards) {
+    const issues = auditIssues(card.name);
     const button = document.createElement('button');
     button.className = `card-item${state.selected === card.file ? ' active' : ''}`;
     button.type = 'button';
     button.innerHTML = `
       <div class="row">
-        <strong>${escapeHtml(card.title)}</strong>
+        <strong>${highlight(card.title)}</strong>
         ${card.layer ? badge(card.layer, card.layer) : ''}
+        ${issues.p0 ? `<span class="badge danger">P0</span>` : ''}
+        ${issues.p1 && !issues.p0 ? `<span class="badge warn">P1</span>` : ''}
       </div>
-      <div class="snippet">${escapeHtml(card.snippet || '')}</div>
+      <div class="snippet">${highlight(card.snippet || '')}</div>
       <div class="sub">
         <span>${escapeHtml(card.file)}</span>
         <span>${relativeTime(card.updated)}</span>
@@ -201,7 +207,60 @@ async function loadCards() {
   const layer = encodeURIComponent(state.layer);
   const data = await api(`/api/cards?q=${q}&layer=${layer}`);
   state.cards = data.cards;
+  state.searchMeta = {
+    terms: data.terms ?? [],
+    handles: data.handles ?? [],
+    phrases: data.phrases ?? [],
+  };
   renderList();
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlight(text) {
+  const escaped = escapeHtml(text);
+  const terms = [
+    ...state.searchMeta.phrases,
+    ...state.searchMeta.handles,
+    ...state.searchMeta.terms,
+  ]
+    .filter((term, index, all) => term.length >= 2 && all.indexOf(term) === index)
+    .map((term) => escapeHtml(term))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  if (!terms.length) return escaped;
+  const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
+  return escaped.replace(pattern, '<mark>$1</mark>');
+}
+
+function auditIssues(cardName) {
+  return state.auditByCard.get(cardName) ?? { p0: 0, p1: 0 };
+}
+
+function indexAudit(audit) {
+  const map = new Map();
+  for (const issue of audit?.parsed?.P0 ?? []) {
+    const current = map.get(issue.card) ?? { p0: 0, p1: 0 };
+    current.p0 += 1;
+    map.set(issue.card, current);
+  }
+  for (const issue of audit?.parsed?.P1 ?? []) {
+    const current = map.get(issue.card) ?? { p0: 0, p1: 0 };
+    current.p1 += 1;
+    map.set(issue.card, current);
+  }
+  return map;
+}
+
+async function loadAudit() {
+  try {
+    const audit = await api('/api/audit', { method: 'POST' });
+    state.audit = audit;
+    state.auditByCard = indexAudit(audit);
+    renderList();
+  } catch { /* audit is optional */ }
 }
 
 async function selectCard(file) {
@@ -213,8 +272,20 @@ async function selectCard(file) {
   state.selected = file;
   state.editing = false;
   state.dirty = false;
+  state.draft = localStorage.getItem(draftKey(file));
   renderList();
   renderCard();
+}
+
+function draftKey(file) {
+  return `exp:draft:${file}`;
+}
+
+function renderDraftBanner() {
+  const banner = $('draft-banner');
+  if (!state.card) return banner.classList.add('hidden');
+  const hasDraft = Boolean(state.draft && state.draft !== state.card.raw);
+  banner.classList.toggle('hidden', !hasDraft || state.editing);
 }
 
 function renderCard() {
@@ -252,6 +323,7 @@ function renderCard() {
       state.card = updated;
       renderCard();
       await loadCards();
+      await loadAudit();
       toast('层已更新');
     } catch (error) {
       toast(error.message);
@@ -265,18 +337,21 @@ function renderCard() {
   $('copy-btn').classList.remove('hidden');
   $('editor').value = card.raw;
   $('dirty').textContent = '';
+  renderDraftBanner();
 }
 
 function startEdit() {
   if (!state.card) return;
   state.editing = true;
-  state.dirty = false;
+  const initial = state.draft ?? state.card.raw;
+  state.dirty = initial !== state.card.raw;
   $('card-preview').classList.add('hidden');
+  $('draft-banner').classList.add('hidden');
   $('edit-wrap').classList.remove('hidden');
   $('edit-btn').classList.add('hidden');
   $('copy-btn').classList.add('hidden');
-  $('editor').value = state.card.raw;
-  $('dirty').textContent = '';
+  $('editor').value = initial;
+  $('dirty').textContent = state.dirty ? '未保存' : '';
   $('editor').focus();
 }
 
@@ -302,18 +377,23 @@ async function saveEdit() {
     state.card = updated;
     state.editing = false;
     state.dirty = false;
+    state.draft = null;
+    localStorage.removeItem(draftKey(updated.file));
     renderCard();
     await loadCards();
     await loadState();
+    await loadAudit();
     toast('已保存');
   } catch (error) {
     if (error.data?.current !== undefined) {
-      const refresh = confirm('文件已被外部修改，未保存。刷新到磁盘版本？');
+      state.draft = content;
+      localStorage.setItem(draftKey(state.card.file), content);
+      const refresh = confirm('文件已被外部修改，未保存。草稿已保留。刷新到磁盘版本？');
       if (refresh) {
         await selectCard(state.card.file);
-        toast('已刷新');
+        toast('已刷新；草稿可恢复');
       } else {
-        $('dirty').textContent = '未保存：磁盘已变化';
+        $('dirty').textContent = '未保存：磁盘已变化（草稿已保留）';
       }
       return;
     }
@@ -407,6 +487,7 @@ async function createCard() {
     await loadCards();
     await loadState();
     await selectCard(created.file);
+    await loadAudit();
     toast('卡片已创建');
   } catch (error) {
     $('new-error').textContent = error.message;
@@ -474,6 +555,8 @@ async function openAudit() {
   try {
     const audit = await api('/api/audit', { method: 'POST' });
     state.audit = audit;
+    state.auditByCard = indexAudit(audit);
+    renderList();
     renderAudit();
   } catch (error) {
     $('audit-sub').textContent = '';
@@ -565,12 +648,33 @@ function bind() {
   $('edit-btn').addEventListener('click', startEdit);
   $('cancel-btn').addEventListener('click', cancelEdit);
   $('save-btn').addEventListener('click', saveEdit);
+  $('restore-draft').addEventListener('click', () => {
+    if (!state.draft) return;
+    startEdit();
+    toast('已恢复草稿');
+  });
+  $('discard-draft').addEventListener('click', () => {
+    if (!state.card) return;
+    localStorage.removeItem(draftKey(state.card.file));
+    state.draft = null;
+    renderDraftBanner();
+    toast('草稿已丢弃');
+  });
   $('inbox-add').addEventListener('click', addInbox);
   $('new-trigger').addEventListener('input', setSuggestedFile);
   $('new-file').addEventListener('input', () => { state.newFileTouched = true; });
   $('editor').addEventListener('input', () => {
-    state.dirty = $('editor').value !== (state.card?.raw ?? '');
+    if (!state.card) return;
+    const value = $('editor').value;
+    state.dirty = value !== state.card.raw;
     $('dirty').textContent = state.dirty ? '未保存' : '';
+    if (state.dirty) {
+      state.draft = value;
+      localStorage.setItem(draftKey(state.card.file), value);
+    } else {
+      state.draft = null;
+      localStorage.removeItem(draftKey(state.card.file));
+    }
   });
   $('modal').addEventListener('click', (event) => {
     if (event.target === $('modal')) closeNew();
@@ -635,9 +739,16 @@ function debounce(fn, ms) {
 async function main() {
   bind();
   try {
+    const params = new URLSearchParams(location.search);
+    const initialQuery = params.get('q');
+    if (initialQuery) {
+      state.q = initialQuery;
+      $('search').value = initialQuery;
+    }
     await loadState();
     await loadCards();
-    const initialFile = new URLSearchParams(location.search).get('file');
+    await loadAudit();
+    const initialFile = params.get('file');
     if (initialFile) await selectCard(initialFile);
   } catch (error) {
     toast(error.message);

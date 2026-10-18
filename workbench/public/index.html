@@ -9,7 +9,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark">经</span>
+      <span class="brand-mark">EXP</span>
       <div>
         <strong>项目经验库</strong>
         <span id="workspace" class="workspace"></span>
@@ -69,6 +69,11 @@
           </div>
         </div>
         <div id="card-meta" class="meta-row"></div>
+        <div id="draft-banner" class="draft-banner hidden">
+          <span>这张卡有一份未保存的草稿。</span>
+          <button id="restore-draft" class="btn small ghost">恢复草稿</button>
+          <button id="discard-draft" class="btn small ghost">丢弃</button>
+        </div>
         <div id="card-preview" class="markdown"></div>
         <div id="edit-wrap" class="edit-wrap hidden">
           <textarea id="editor" spellcheck="false"></textarea>
