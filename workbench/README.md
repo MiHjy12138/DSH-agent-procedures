@@ -27,7 +27,8 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 # 或 --profile web
 ```
 
-装完重启 DSH。插件配置在 `cordis.patch.yml`：
+装完重启 DSH；也可以在“插件”页把 `dsh-experience-workbench` 关闭再打开来重载。
+插件配置在 `cordis.patch.yml`：
 
 ```yaml
 - insert:
