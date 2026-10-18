@@ -41,6 +41,21 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 `proceduresDir` 留空时：项目条列出 DSH 工作区，默认进入 `default-workspace`；
 包内 `fixtures/procedures/` 作为只读的“示例项目”。插件不跨项目、不写回、不接外部记忆。
 
+## Codex 插件
+
+`codex-plugin/procedures-workbench/` 是一个 Codex 插件（Skill + Browser）：
+
+- skill：解析当前项目根，调用 `scripts/open.mjs`；
+- `open.mjs`：自动建骨架、起随机本地端口、打印 URL；
+- 用 Codex 内置 Browser 打开 URL 查看/搜索卡片；
+- `scripts/stop.mjs` 按项目停止本地服务；
+- 不自动捕获、不读入上下文、不调模型做初始化。
+
+```powershell
+node codex-plugin/procedures-workbench/scripts/open.mjs --workspace .
+node codex-plugin/procedures-workbench/scripts/stop.mjs --workspace .
+```
+
 ## 项目
 
 顶部“当前项目”条会列出 DSH 工作区（读 `~/.dsh/storages/workspace.json`）和只读的

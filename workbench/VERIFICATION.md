@@ -18,7 +18,8 @@
 - `node workbench/test.mjs`：10 tests / 10 pass / 0 fail；
 - `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail；
 - `node workbench/test-plugin.mjs`：5 tests / 5 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换 + 新工作区自动建库 + 幂等性）；
-- `node workbench/test-init.mjs`：1 test / 1 pass / 0 fail（跨 agent CLI init 幂等、不覆盖）。
+- `node workbench/test-init.mjs`：1 test / 1 pass / 0 fail（跨 agent CLI init 幂等、不覆盖）；
+- Codex 插件：`validate_plugin.py` 通过；`open.mjs` / `stop.mjs` 实际启动/停止通过。
 
 ## DSH 插件
 
@@ -37,7 +38,9 @@
 - 实际页面验证：徽标显示 `原理`，详情显示“复核层”，收件箱/审计互斥；
 - 自动建库测试：临时 DSH_HOME 新增 workspace 后，watcher 创建 `procedures/_inbox.md`、`_layers.md`、`_模板.md`；
 - 重复执行 `ensureProjectLibrary` 不覆盖用户改过的 `_inbox.md`；
-- `node workbench/cli.mjs init --workspace .` 已可用于 Codex/Claude Code，不依赖 DSH。
+- `node workbench/cli.mjs init --workspace .` 已可用于 Codex/Claude Code，不依赖 DSH；
+- Codex 插件 `codex-plugin/procedures-workbench` 通过 `validate_plugin.py`；
+- `open.mjs` 实际启动成功（随机端口、skeleton、state/API 可读），`stop.mjs` 正常停止。
 
 ## UI 回归
 

@@ -1,0 +1,22 @@
+{
+  "name": "procedures-workbench",
+  "version": "0.1.0",
+  "description": "在 Codex 内置 Browser 中查看当前项目的 procedures/ 经验卡库；不自动捕获、不读入上下文。",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Procedures Workbench",
+    "shortDescription": "查看项目本地经验卡库",
+    "longDescription": "启动本地 procedures 工作台并打开 Codex 内置 Browser，按项目查看、搜索和浏览经验卡。初始化只做一次文件系统检查，不调用模型、不消耗 token。",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read"],
+    "defaultPrompt": [
+      "打开当前项目的经验库",
+      "查看这个项目踩过的坑",
+      "搜索项目经验卡"
+    ]
+  }
+}
