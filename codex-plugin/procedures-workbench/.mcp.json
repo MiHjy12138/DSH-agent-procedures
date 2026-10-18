@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "procedures_workbench": {
+      "command": "node",
+      "args": ["mcp/server.mjs"],
+      "cwd": ".",
+      "enabled": true,
+      "env_vars": [
+        "CODEX_PROJECT_ROOT",
+        "CODEX_HOME",
+        "CLAUDE_PROJECT_DIR",
+        "INIT_CWD",
+        "HOME",
+        "USERPROFILE",
+        "PATH"
+      ],
+      "startup_timeout_sec": 10,
+      "tool_timeout_sec": 60
+    }
+  }
+}

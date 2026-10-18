@@ -1,32 +1,31 @@
-# Procedures Workbench (Codex plugin)
+# Procedures Workbench (Codex MCP plugin)
 
-A local viewer for a project's `procedures/` experience cards.
+A project-local viewer for `procedures/` experience cards, exposed as MCP tools.
 
 ## What it does
 
-- Creates the `procedures/` skeleton once, if missing.
-- Starts the local workbench on a free localhost port.
-- Opens it in Codex's in-app Browser.
+- `procedures_list` — list cards in the current project
+- `procedures_search` — search triggers, errors, commands, paths
+- `procedures_get` — read one card
+- `procedures_inbox` — list inbox lines
+- `procedures_init` — create the skeleton once, idempotently
 
-It does not read the library into context, call a model just to initialize it,
-or write cards automatically.
+Initialization is filesystem-only: no model call and no token cost.
+The plugin does not start a browser or open a UI.
 
-## Use
+## Project root
 
-Ask Codex to open the procedures workbench in the current project. The skill
-runs `scripts/open.mjs`, then navigates Browser to the printed URL.
+Tools accept an optional `project_root`. When omitted, the server uses
+`CODEX_PROJECT_ROOT`, `CLAUDE_PROJECT_DIR`, `INIT_CWD`, then its cwd.
 
 ## Files
 
 ```text
 .codex-plugin/plugin.json
-skills/procedures-workbench/SKILL.md
-scripts/open.mjs
-scripts/stop.mjs
-server.mjs
+.mcp.json
+mcp/server.mjs
 lib.mjs
 init.mjs
-public/
 tools/
 templates/
 ```

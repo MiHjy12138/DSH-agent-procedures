@@ -40,7 +40,9 @@
 - 重复执行 `ensureProjectLibrary` 不覆盖用户改过的 `_inbox.md`；
 - `node workbench/cli.mjs init --workspace .` 已可用于 Codex/Claude Code，不依赖 DSH；
 - Codex 插件 `codex-plugin/procedures-workbench` 通过 `validate_plugin.py`；
-- `open.mjs` 实际启动成功（随机端口、skeleton、state/API 可读），`stop.mjs` 正常停止。
+- Codex 插件已改为 **MCP stdio server**，工具：`procedures_list/search/get/inbox/init`；
+- MCP 测试通过：initialize、tools/list、init 建骨架、list、get；
+- 不再启动 Browser，也不需要手动打开页面。
 
 ## UI 回归
 

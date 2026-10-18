@@ -41,20 +41,17 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 `proceduresDir` 留空时：项目条列出 DSH 工作区，默认进入 `default-workspace`；
 包内 `fixtures/procedures/` 作为只读的“示例项目”。插件不跨项目、不写回、不接外部记忆。
 
-## Codex 插件
+## Codex 插件（MCP）
 
-`codex-plugin/procedures-workbench/` 是一个 Codex 插件（Skill + Browser）：
+`codex-plugin/procedures-workbench/` 是一个 Codex MCP 插件：
 
-- skill：解析当前项目根，调用 `scripts/open.mjs`；
-- `open.mjs`：自动建骨架、起随机本地端口、打印 URL；
-- 用 Codex 内置 Browser 打开 URL 查看/搜索卡片；
-- `scripts/stop.mjs` 按项目停止本地服务；
-- 不自动捕获、不读入上下文、不调模型做初始化。
+- 本地 stdio MCP server；
+- `procedures_list` / `procedures_search` / `procedures_get` / `procedures_inbox` / `procedures_init`；
+- 不启动 Browser、不需要手动开页面；
+- 工具接受 `project_root`，默认从 `CODEX_PROJECT_ROOT` / `CLAUDE_PROJECT_DIR` / `INIT_CWD` / cwd 取；
+- MCP server 的 cwd 是插件目录时会要求显式传项目根，避免在插件目录误建库。
 
-```powershell
-node codex-plugin/procedures-workbench/scripts/open.mjs --workspace .
-node codex-plugin/procedures-workbench/scripts/stop.mjs --workspace .
-```
+安装后 Codex 直接调用这些工具查看/搜索卡片；初始化仍是纯文件系统操作，不调模型。
 
 ## 项目
 
