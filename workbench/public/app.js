@@ -716,7 +716,92 @@ async function copyPath() {
   toast('路径已复制');
 }
 
+function initSplitter() {
+  const layout = document.querySelector('.layout');
+  const splitter = $('splitter');
+  if (!layout || !splitter) return;
+  const sidebar = document.querySelector('.sidebar');
+  const MIN = 280;
+  const DEFAULT = 400;
+  const RIGHT_MIN = 420;
+  const mobile = () => window.matchMedia('(max-width: 760px)').matches;
+
+  const bounds = () => {
+    const total = layout.getBoundingClientRect().width;
+    return { min: MIN, max: Math.max(MIN, total - RIGHT_MIN) };
+  };
+
+  const apply = (width, persist = false) => {
+    if (mobile()) return;
+    const { min, max } = bounds();
+    const next = Math.round(Math.max(min, Math.min(max, width)));
+    layout.style.setProperty('--sidebar-width', `${next}px`);
+    splitter.setAttribute('aria-valuemin', String(min));
+    splitter.setAttribute('aria-valuemax', String(max));
+    splitter.setAttribute('aria-valuenow', String(next));
+    if (persist) localStorage.setItem('exp:sidebar-width', String(next));
+  };
+
+  const current = () => sidebar.getBoundingClientRect().width;
+  const saved = Number(localStorage.getItem('exp:sidebar-width'));
+  apply(Number.isFinite(saved) && saved > 0 ? saved : DEFAULT);
+
+  let dragging = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  const stop = (event) => {
+    if (!dragging) return;
+    dragging = false;
+    layout.classList.remove('resizing');
+    try { splitter.releasePointerCapture(event.pointerId); } catch { /* already released */ }
+    apply(current(), true);
+  };
+
+  splitter.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    dragging = true;
+    startX = event.clientX;
+    startWidth = current();
+    layout.classList.add('resizing');
+    try { splitter.setPointerCapture(event.pointerId); } catch { /* optional */ }
+    event.preventDefault();
+  });
+  splitter.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    apply(startWidth + event.clientX - startX);
+  });
+  splitter.addEventListener('pointerup', stop);
+  splitter.addEventListener('pointercancel', stop);
+
+  splitter.addEventListener('dblclick', () => apply(DEFAULT, true));
+  splitter.addEventListener('keydown', (event) => {
+    const { min, max } = bounds();
+    const step = event.shiftKey ? 40 : 16;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      apply(current() + (event.key === 'ArrowLeft' ? -step : step), true);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      apply(min, true);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      apply(max, true);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      apply(DEFAULT, true);
+    }
+  });
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => apply(current()), 120);
+  });
+}
+
 function bind() {
+  initSplitter();
   $('new-btn').addEventListener('click', () => openNew());
   $('audit-btn').addEventListener('click', openAudit);
   $('inbox-btn').addEventListener('click', openInbox);

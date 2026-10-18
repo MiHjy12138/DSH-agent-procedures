@@ -53,6 +53,16 @@ test('UI: search, edit, conflict draft, layer create, audit', { skip: canRun ? f
     assert.equal(await page.inputValue('#project-select'), 'local');
     assert.match(await page.textContent('#project-path'), /procedures/);
 
+    const beforeWidth = (await page.locator('.sidebar').boundingBox()).width;
+    const splitBox = await page.locator('#splitter').boundingBox();
+    await page.mouse.move(splitBox.x + splitBox.width / 2, splitBox.y + 160);
+    await page.mouse.down();
+    await page.mouse.move(splitBox.x + splitBox.width / 2 + 100, splitBox.y + 160, { steps: 6 });
+    await page.mouse.up();
+    const afterWidth = (await page.locator('.sidebar').boundingBox()).width;
+    assert.ok(afterWidth > beforeWidth + 40);
+    assert.ok(Number(await page.evaluate(() => localStorage.getItem('exp:sidebar-width'))) > 400);
+
     await page.click('#inbox-btn');
     await page.waitForSelector('#inbox-panel:not(.hidden)');
     await page.click('#audit-btn');

@@ -191,10 +191,39 @@ kbd {
 
 /* layout */
 .layout {
+  --sidebar-width: 400px;
   height: calc(100vh - 106px);
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) 7px minmax(0, 1fr);
 }
+.splitter {
+  position: relative;
+  cursor: col-resize;
+  background: var(--panel-2);
+  touch-action: none;
+  z-index: 2;
+}
+.splitter::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+  background: var(--line);
+  transition: background .15s ease, width .15s ease, left .15s ease;
+}
+.splitter:hover::before,
+.splitter:focus-visible::before,
+.layout.resizing .splitter::before {
+  left: 2px;
+  width: 2px;
+  background: var(--accent);
+}
+.splitter:focus-visible { outline: none; }
+.layout.resizing { cursor: col-resize; user-select: none; }
+.layout.resizing * { cursor: col-resize !important; }
+.sidebar { min-width: 0; }
 .sidebar {
   min-height: 0;
   display: flex;
@@ -618,6 +647,7 @@ mark {
   .project-path { max-width: 70vw; }
   .project-note { display: none; }
   .layout { height: auto; min-height: calc(100vh - 160px); grid-template-columns: 1fr; }
+  .splitter { display: none; }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); max-height: 42vh; }
   .card { padding: 20px 16px 60px; }
   .welcome { margin-top: 40px; padding: 0 20px; }
