@@ -1,24 +1,55 @@
-# tools/ —— 两个可选附件
+# tools/ —— 三个可选附件
 
-这两个脚本**不是**经验库机制的一部分。它们只是配套工具：
+这些脚本**不是**经验库机制的一部分。它们只是配套工具：
 
 | 脚本 | 解决什么问题 |
 | --- | --- |
 | `scan-sessions.mjs` | 机制落地**之前**：从已有的历史会话里挖「碰壁 → 正确姿势」，用来攒第一批经验卡 |
 | `procedures-probe.mjs` | 机制落地**之后**：盯住新会话，验证 agent 到底有没有主动去读 `procedures/`（钩子生不生效） |
+| `procedures-audit.mjs` | 卡攒起来**之后**：静态体检 —— 结构缺段、断链、体积、触发词覆盖、对象失效、结论偏旧 |
 
-核心机制（钩子 + 索引 + 卡）**不依赖这两个脚本中的任何一个**。删掉 `tools/` 目录，机制照常工作。
+核心机制（钩子 + 索引 + 卡）**不依赖这些脚本中的任何一个**。删掉 `tools/` 目录，机制照常工作。
 
-两个文件各自独立、零依赖，可以单独拷走——但都依赖同一套宿主约定（见文末「失效风险」）。
+三个文件各自独立、零依赖，可以单独拷走——但都依赖同一套宿主约定（见文末「失效风险」）。
 
 ---
 
 ## 前置要求
 
-- **Node.js ≥ 22.15.0 或 ≥ 23.8.0**。会话日志是 zstd 压缩的，脚本用 `node:zlib` 的 `zstdDecompressSync`
+- **Node.js ≥ 22.15.0 或 ≥ 23.8.0**（仅 `scan-sessions.mjs` 与 `procedures-probe.mjs`）。会话日志是 zstd 压缩的，脚本用 `node:zlib` 的 `zstdDecompressSync`
   （该 API 自 v22.15.0 / v23.8.0 起提供，官方标记为实验性；实测 Node 24 可用）。
   更早的 Node 会在运行时报 `zstdDecompressSync is not a function`。
+- `procedures-audit.mjs` **不读会话日志**，不需要 zstd —— Node 18+ 即可跑。
 - 无 npm 依赖，不需要 `npm install`。
+
+---
+
+## `procedures-audit.mjs` —— 卡库静态体检
+
+```bash
+node tools/procedures-audit.mjs                       # 在当前目录找 procedures/
+node tools/procedures-audit.mjs --dir path/to/procedures
+node tools/procedures-audit.mjs --json                 # 机器可读，便于接 CI
+node tools/procedures-audit.mjs --max-bytes 3072 --stale-days 90
+```
+
+检查七项，**只读，不写、不删、不改任何卡**：
+
+| 检查 | 级别 | 判据 |
+| --- | --- | --- |
+| 结构缺必需段 | P0 | 缺「触发 / 首选 / 别再来」任一 |
+| 断链 | P0 | 卡里引用的另一张卡不存在（能识别省略限定后缀、以及标注为外部来源的引用） |
+| 体积超限 | P1 | > `--max-bytes`（默认 3072 B）。超了先删解释性句子，别删命令 |
+| 未分层 | P1 | 有 `_layers.md` 但表里没有这张卡 |
+| 对象可能已消失 | P1 | 卡里的 Windows 绝对路径不存在。**常含示例路径，需人工确认** |
+| 触发词单一 | P1 | 触发行只有 1 个说法 —— 换个词就静默不命中 |
+| 结论偏旧 | P1 | 卡里最早日期距今超过 `--stale-days`（默认 90） |
+
+**退出码**：`0` 全通过 / `1` 有 P0 或 P1 / `2` 找不到卡库目录。
+
+**分工**：`audit` 看「卡本身写得好不好、引用还成不成立」（不需要会话日志）；`procedures-review` 看「卡最近有没有被用、该不该复核」（需要读会话日志）。两者配合 = 静态 + 动态。
+
+**它不会替你处置**：P0/P1 都只是清单，「补 / 并 / 退役」由使用者审阅后决定 —— 这是机制的红线，不是工具的缺陷。
 
 ---
 
