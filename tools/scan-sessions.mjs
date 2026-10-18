@@ -40,7 +40,7 @@ const MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd])
 // 会话文件名有三种历史形态（新→旧）。只认最新的那种会漏掉绝大部分历史：
 // 实测同一工作区同一时刻，旧格式有三百多个会话、新格式只有几十个。故三种都认，按新→旧取第一个存在的。
 const SESSION_FILES = ['session.v4.jsonl.zstd', 'session.v3.jsonl.zstd', 'session.jsonl.zstd']
-const MODES = new Set(['list', 'calls', 'user', 'say'])
+const MODES = new Set(['list', 'calls', 'results', 'user', 'say'])
 
 class UsageError extends Error {}
 
@@ -97,13 +97,15 @@ function printHelp() {
   console.log(`scan-sessions —— 检索 agent 历史会话日志
 
 用法：
-  node tools/scan-sessions.mjs [list|calls|user|say] [工作区] [正则] [选项]
+  node tools/scan-sessions.mjs [list|calls|results|user|say] [工作区] [正则] [选项]
 
 模式：
-  list    列所有工作区及其会话数（默认模式）
-  calls   列工具调用与配对结果（最常用于找「试了什么、结果如何」）
-  user    列真人发言（找需求与痛点最快）
-  say     列助手发言（找结论）
+  list     列所有工作区及其会话数（默认模式）
+  calls    列工具调用与配对结果（最常用于找「试了什么、结果如何」）
+  results  只搜「工具结果」里的内容（找报错码/输出——例如搜 FS_NOT_OBSERVED 这类
+           只在结果里出现的串；用 calls 搜它会 0 命中，因为 calls 匹配的是参数）
+  user     列真人发言（找需求与痛点最快）
+  say      列助手发言（找结论）
 
 选项：
   --sessions <路径>   会话根目录，或其上级宿主主目录
@@ -302,7 +304,13 @@ function main() {
     // 先收齐全部 tool/result 再配对：日志里 call 总是出现在它的 result 之前，
     // 单趟遍历时 result 表还是空的，RES 会永远显示「(无结果)」。
     const results = new Map()
+    const callNames = new Map()   // callId → 工具名（results 模式显示用）
     for (const e of events) {
+      if (e.type === 'tool/call') {
+        const cid = e.data?.callId
+        if (cid) callNames.set(cid, e.data?.name ?? '?')
+        continue
+      }
       if (e.type !== 'tool/result') continue
       const cid = e.data?.callId ?? e.data?.message?.source?.callId ?? e.data?.toolCallId
       if (cid) results.set(cid, { t: blocks(e.data?.message), err: e.data?.error ?? (e.data?.message?.isError ? 'isError' : null) })
@@ -315,6 +323,15 @@ function main() {
         const r = results.get(e.data?.callId)
         const res = r ? (r.err ? 'ERR ' + JSON.stringify(r.err).slice(0, 200) : r.t.slice(0, o.maxLen)) : '(无结果)'
         lines.push(`[t${e.data?.turn}] ${e.data?.name}\n   ARG: ${a.slice(0, o.maxLen)}\n   RES: ${res}`)
+        continue
+      }
+      if (o.mode === 'results' && e.type === 'tool/result') {
+        // 结果里才有真正发生过的报错码 / 输出：calls 只匹配参数，搜「FS_NOT_OBSERVED」这类必然 0 命中
+        const t = blocks(e.data?.message)
+        if (!t || (re && !re.test(t))) continue
+        const cid = e.data?.callId ?? e.data?.message?.source?.callId ?? '?'
+        const nm = callNames.get(cid) ?? '?'
+        lines.push(`[t${e.data?.turn ?? '?'}] ${nm} (${cid})\n   RES: ${t.slice(0, o.maxLen)}`)
         continue
       }
       if (o.mode === 'user' && e.type === 'user/message' && e.data?.source?.kind === 'user') {
