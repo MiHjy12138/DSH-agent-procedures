@@ -17,7 +17,7 @@
   `工具-pnpm版本不存在.md`；
 - `node workbench/test.mjs`：10 tests / 10 pass / 0 fail；
 - `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail；
-- `node workbench/test-plugin.mjs`：3 tests / 3 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换隔离）。
+- `node workbench/test-plugin.mjs`：5 tests / 5 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换 + 新工作区自动建库 + 幂等性）。
 
 ## DSH 插件
 
@@ -33,7 +33,9 @@
 - 项目切换测试使用临时 DSH_HOME：A 项目 1 张卡、切到 B 变 0 张、切回 A 恢复；
 - 实际 DSH 里通过插件管理器关闭/开启 `dsh-experience-workbench` 重载了服务端，无需重启整个应用；
 - 实际页面项目条列出 6 个项目，`示例项目` 3 张卡，`default-workspace` 0 张；
-- 实际页面验证：徽标显示 `原理`，详情显示“复核层”，收件箱/审计互斥。
+- 实际页面验证：徽标显示 `原理`，详情显示“复核层”，收件箱/审计互斥；
+- 自动建库测试：临时 DSH_HOME 新增 workspace 后，watcher 创建 `procedures/_inbox.md`、`_layers.md`、`_模板.md`；
+- 重复执行 `ensureProjectLibrary` 不覆盖用户改过的 `_inbox.md`。
 
 ## UI 回归
 

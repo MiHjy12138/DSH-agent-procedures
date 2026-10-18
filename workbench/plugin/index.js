@@ -97,6 +97,64 @@ function chooseProject(projects, config = {}) {
   return defaultWorkspace || withProcedures || projects[0];
 }
 
+export function ensureProjectLibrary(projectRoot) {
+  const root = path.resolve(String(projectRoot ?? ''));
+  if (!root || !fs.existsSync(root)) return { created: false, error: '项目目录不存在' };
+  const proceduresDir = path.join(root, 'procedures');
+  const existed = fs.existsSync(proceduresDir);
+  fs.mkdirSync(proceduresDir, { recursive: true });
+
+  const template = path.join(packageRoot, 'templates', 'card-template.md');
+  const skeleton = {
+    '_inbox.md': '# 待整理 inbox\n\n',
+    '_layers.md': '| 卡 | 层 |\n| --- | --- |\n',
+    '_模板.md': fs.existsSync(template)
+      ? fs.readFileSync(template, 'utf8')
+      : '# <分类>-<现象>\n\n> **触发**：<任务里会出现的现象>\n> **验证**：<怎么确认这次真的成了>\n\n## 首选\n\n<可直接复制的那一条>\n\n## 别再来\n\n| 弯路 | 为什么不通 |\n| --- | --- |\n| <试过并失败的> | <报错原文 / 为什么不成立> |\n',
+  };
+  const written = [];
+  for (const [name, content] of Object.entries(skeleton)) {
+    const file = path.join(proceduresDir, name);
+    if (fs.existsSync(file)) continue;
+    fs.writeFileSync(file, content, 'utf8');
+    written.push(name);
+  }
+  return { created: !existed, proceduresDir, written };
+}
+
+function startWorkspaceWatcher(ctx) {
+  const dshHome = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
+  const storagesDir = path.join(dshHome, 'storages');
+  if (!fs.existsSync(storagesDir)) return;
+  let seen = new Set(readDshProjects().map((project) => project.id));
+  let timer = null;
+  const check = () => {
+    if (timer) return;
+    timer = setTimeout(() => {
+      timer = null;
+      for (const project of readDshProjects()) {
+        if (seen.has(project.id)) continue;
+        seen.add(project.id);
+        try { ensureProjectLibrary(project.root); } catch { /* project may be mid-creation */ }
+      }
+    }, 200);
+  };
+  let watcher;
+  try {
+    watcher = fs.watch(storagesDir, { persistent: false }, (event, filename) => {
+      if (!filename || String(filename) === 'workspace.json') check();
+    });
+  } catch {
+    return;
+  }
+  const dispose = () => {
+    watcher.close();
+    if (timer) clearTimeout(timer);
+  };
+  if (typeof ctx.effect === 'function') ctx.effect(() => dispose, 'experience-workbench: workspace watcher');
+  else return dispose;
+}
+
 function projectView(project) {
   return {
     id: project.id,
@@ -154,9 +212,8 @@ function createHandler(config = {}) {
   let library = null;
 
   function ensureProcedures() {
-    if (fs.existsSync(proceduresDir)) return;
-    if (!fs.existsSync(current.root)) throw new Error(`项目目录不存在：${current.root}`);
-    fs.mkdirSync(proceduresDir, { recursive: true });
+    const result = ensureProjectLibrary(current.root);
+    if (result.error) throw new Error(`${result.error}：${current.root}`);
     current.hasProcedures = true;
   }
 
@@ -348,4 +405,5 @@ export function apply(ctx, config = {}) {
   });
   if (typeof ctx.effect === 'function') ctx.effect(register, 'experience-workbench: routes');
   else register();
+  startWorkspaceWatcher(ctx);
 }

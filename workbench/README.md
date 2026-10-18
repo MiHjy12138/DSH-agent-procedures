@@ -50,6 +50,20 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 `proceduresDir` 配置存在时，会多一个“本地配置”项目并作为入口；默认进入
 `default-workspace`（没有卡就显示空状态，不是全局库）。
 
+## 自动建库
+
+新 workspace 登记到 `workspace.json` 时，插件文件监听会为它创建一次骨架：
+
+```text
+procedures/
+  _inbox.md
+  _layers.md
+  _模板.md
+```
+
+不调用模型、不读 skill、不消耗 token；只检查文件是否存在，存在就跳过、不覆盖。
+第一次打开“经验库”或切换项目时也会再兜底检查当前项目。
+
 ## CLI
 
 ```powershell
@@ -104,7 +118,7 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ```powershell
 node workbench/test.mjs        # lib 搜索/分层/审计
 node workbench/test-api.mjs    # 保存冲突/原子写/分层/审计 API
-node workbench/test-plugin.mjs # DSH 插件 prefix 路由 + 客户端 slot + 项目切换隔离
+node workbench/test-plugin.mjs # prefix 路由 + slot + 项目隔离 + 新工作区自动建库
 ```
 
 可选 UI 回归（需要本机 Edge + Playwright）：

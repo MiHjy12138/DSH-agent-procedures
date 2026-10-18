@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
-import { apply, name, inject } from './plugin/index.js';
+import { apply, ensureProjectLibrary, name, inject } from './plugin/index.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.join(here, 'fixtures', 'procedures');
@@ -16,9 +16,12 @@ test('plugin server mounts under DSH webServer prefix', async () => {
   assert.deepEqual(inject, ['webServer']);
 
   const routes = [];
+  const disposers = [];
   const ctx = {
     effect(fn) {
-      return fn();
+      const dispose = fn();
+      if (typeof dispose === 'function') disposers.push(dispose);
+      return dispose;
     },
     webServer: {
       register(route) {
@@ -65,6 +68,7 @@ test('plugin server mounts under DSH webServer prefix', async () => {
     assert.doesNotMatch(app, /\/api\//);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    for (const dispose of disposers) dispose();
   }
 });
 
@@ -136,8 +140,13 @@ test('project switch scopes cards to the selected workspace', async () => {
   const previousHome = process.env.DSH_HOME;
   process.env.DSH_HOME = home;
   const routes = [];
+  const disposers = [];
   const ctx = {
-    effect(fn) { return fn(); },
+    effect(fn) {
+      const dispose = fn();
+      if (typeof dispose === 'function') disposers.push(dispose);
+      return dispose;
+    },
     webServer: { register(route) { routes.push(route); return () => {}; } },
   };
   apply(ctx, {});
@@ -162,6 +171,9 @@ test('project switch scopes cards to the selected workspace', async () => {
     const bState = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
     assert.equal(bState.cards, 0);
     assert.equal(bState.project.proceduresDir, path.join(workspaceB, 'procedures'));
+    assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_inbox.md')));
+    assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_layers.md')));
+    assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_模板.md')));
 
     await fetch(`${base}/plugins/experience-workbench/api/project`, {
       method: 'POST',
@@ -172,8 +184,79 @@ test('project switch scopes cards to the selected workspace', async () => {
     assert.equal(back.cards, 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    for (const dispose of disposers) dispose();
     if (previousHome === undefined) delete process.env.DSH_HOME;
     else process.env.DSH_HOME = previousHome;
     fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('workspace watcher initializes a newly added workspace once', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'exp-watch-'));
+  const workspaceA = path.join(home, 'workspaces', 'a');
+  const workspaceB = path.join(home, 'workspaces', 'b');
+  fs.mkdirSync(workspaceA, { recursive: true });
+  fs.mkdirSync(workspaceB, { recursive: true });
+  const storages = path.join(home, 'storages');
+  fs.mkdirSync(storages, { recursive: true });
+  const workspaceFile = path.join(storages, 'workspace.json');
+  const writeWorkspaces = (includeB) => {
+    const workspaces = {
+      a: { title: 'default-workspace', path: workspaceA },
+    };
+    if (includeB) workspaces.b = { title: '新项目', path: workspaceB };
+    fs.writeFileSync(workspaceFile, JSON.stringify({ tables: { workspaces } }), 'utf8');
+  };
+  writeWorkspaces(false);
+
+  const previousHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = home;
+  const disposers = [];
+  const ctx = {
+    effect(fn) {
+      const dispose = fn();
+      if (typeof dispose === 'function') disposers.push(dispose);
+      return dispose;
+    },
+    webServer: { register() { return () => {}; } },
+  };
+  apply(ctx, {});
+  try {
+    writeWorkspaces(true);
+    const started = Date.now();
+    let initialized = false;
+    while (Date.now() - started < 2500) {
+      if (fs.existsSync(path.join(workspaceB, 'procedures', '_inbox.md'))) {
+        initialized = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.equal(initialized, true);
+    assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_模板.md')));
+  } finally {
+    for (const dispose of disposers) dispose();
+    if (previousHome === undefined) delete process.env.DSH_HOME;
+    else process.env.DSH_HOME = previousHome;
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('ensureProjectLibrary creates skeleton once and never overwrites', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'exp-init-'));
+  try {
+    const first = ensureProjectLibrary(root);
+    assert.equal(first.created, true);
+    assert.ok(first.written.includes('_inbox.md'));
+    assert.ok(fs.existsSync(path.join(root, 'procedures', '_layers.md')));
+    assert.ok(fs.existsSync(path.join(root, 'procedures', '_模板.md')));
+
+    fs.writeFileSync(path.join(root, 'procedures', '_inbox.md'), '# 我自己改过\n', 'utf8');
+    const second = ensureProjectLibrary(root);
+    assert.equal(second.created, false);
+    assert.deepEqual(second.written, []);
+    assert.equal(fs.readFileSync(path.join(root, 'procedures', '_inbox.md'), 'utf8'), '# 我自己改过\n');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
