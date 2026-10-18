@@ -64,5 +64,14 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ## 测试
 
 ```powershell
-node workbench/test.mjs
+node workbench/test.mjs       # lib 搜索/分层/审计
+node workbench/test-api.mjs   # 保存冲突/原子写/分层/审计 API
+```
+
+可选 UI 回归（需要本机 Edge + Playwright）：
+
+```powershell
+$env:PLAYWRIGHT_PATH = '<...>\node_modules\playwright'
+$env:EDGE_PATH = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+node workbench/test-ui.mjs    # 搜索/高亮/编辑/冲突草稿/新建分层/审计
 ```
