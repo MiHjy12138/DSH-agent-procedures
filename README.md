@@ -130,7 +130,7 @@ Agent 会**反复踩同一个坑**，而且往往在同一个项目里踩两次�
 各工作区 `procedures/` 存踩过的坑，不常驻注入，按需读。
 
 - **动手前**：任务撞上「网页抓不到正文 / 插件改了不生效」这类现象，先**搜**触发词，别凭记忆答：
-  拿任务里的现象词搜 `procedures/*.md`（Windows：`Select-String -Path procedures\*.md -Pattern "<现象词>"`），
+  拿任务里的现象词搜 `procedures/*.md`（POSIX：`grep -rl "<现象词>" procedures/`；Windows PowerShell：`Select-String -Path procedures\*.md -Pattern "<现象词>"`），
   命中哪张 read 哪张。卡少或搜不动时，列目录看文件名挑卡，一样算数。
 - **踩到坑的当时**：只要不是「照着卡做就顺了」而是又试错了几轮 → 立刻往 `procedures/_inbox.md` 记一行。
   **别等收尾** —— 收尾要靠回忆，回忆不可靠。**记一行也算数。**
