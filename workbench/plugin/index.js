@@ -35,6 +35,7 @@ function readDshProjects() {
           root,
           proceduresDir,
           hasProcedures: fs.existsSync(proceduresDir),
+          sessionIds: Array.isArray(item.sessionIds) ? item.sessionIds : [],
           dsh: true,
         };
       })
@@ -42,6 +43,25 @@ function readDshProjects() {
   } catch {
     return [];
   }
+}
+
+export function hasRealConversation(project) {
+  const dshHome = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
+  const sessionsDir = path.join(dshHome, 'storages', 'session_projcache', 'sessions');
+  const fresh = project?.root
+    ? readDshProjects().find((item) => item.root === path.resolve(project.root))
+    : null;
+  const sessionIds = fresh?.sessionIds ?? project?.sessionIds ?? [];
+  for (const sessionId of sessionIds) {
+    try {
+      const file = path.join(sessionsDir, `${sessionId}.json`);
+      if (!fs.existsSync(file)) continue;
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const count = parsed?.record?.rows?.titleInput?.val?.count;
+      if (Number(count) > 0) return true;
+    } catch { /* ignore a partially-written session */ }
+  }
+  return false;
 }
 
 function buildProjects(config = {}) {
@@ -103,8 +123,9 @@ function chooseProject(projects, config = {}) {
 function startWorkspaceWatcher(ctx) {
   const dshHome = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
   const storagesDir = path.join(dshHome, 'storages');
+  const sessionsDir = path.join(storagesDir, 'session_projcache', 'sessions');
   if (!fs.existsSync(storagesDir)) return;
-  let seen = new Set(readDshProjects().map((project) => project.id));
+  const seen = new Set(readDshProjects().map((project) => project.id));
   let timer = null;
   const check = () => {
     if (timer) return;
@@ -112,21 +133,31 @@ function startWorkspaceWatcher(ctx) {
       timer = null;
       for (const project of readDshProjects()) {
         if (seen.has(project.id)) continue;
-        seen.add(project.id);
-        try { ensureProjectLibrary(project.root); } catch { /* project may be mid-creation */ }
+        // A new workspace alone is not enough: wait for the first real user message.
+        if (!hasRealConversation(project)) continue;
+        try {
+          ensureProjectLibrary(project.root);
+          seen.add(project.id);
+        } catch { /* project may be mid-creation; retry on the next event */ }
       }
     }, 200);
   };
-  let watcher;
+  const watchers = [];
   try {
-    watcher = fs.watch(storagesDir, { persistent: false }, (event, filename) => {
+    watchers.push(fs.watch(storagesDir, { persistent: false }, (event, filename) => {
       if (!filename || String(filename) === 'workspace.json') check();
-    });
-  } catch {
-    return;
+    }));
+  } catch { /* no workspace watcher */ }
+  if (fs.existsSync(sessionsDir)) {
+    try {
+      watchers.push(fs.watch(sessionsDir, { persistent: false }, (event, filename) => {
+        if (!filename || String(filename).endsWith('.json')) check();
+      }));
+    } catch { /* no session watcher */ }
   }
+  if (!watchers.length) return;
   const dispose = () => {
-    watcher.close();
+    for (const watcher of watchers) watcher.close();
     if (timer) clearTimeout(timer);
   };
   if (typeof ctx.effect === 'function') ctx.effect(() => dispose, 'experience-workbench: workspace watcher');
@@ -189,14 +220,21 @@ function createHandler(config = {}) {
   let proceduresDir = current.proceduresDir;
   let library = null;
 
-  function ensureProcedures() {
+  function canAutoInit() {
+    return !current.dsh || current.demo || current.configured || hasRealConversation(current);
+  }
+
+  function ensureProcedures(force = false) {
+    if (!fs.existsSync(proceduresDir) && !force && !canAutoInit()) {
+      throw new Error('这个项目还没有开始过真实对话；先发一条消息，或手动创建卡片');
+    }
     const result = ensureProjectLibrary(current.root);
     if (result.error) throw new Error(`${result.error}：${current.root}`);
     current.hasProcedures = true;
   }
 
-  const getLibrary = () => {
-    ensureProcedures();
+  const getLibrary = (force = false) => {
+    ensureProcedures(force);
     if (!library) library = createLibrary(proceduresDir, packageRoot);
     return library;
   };
@@ -206,7 +244,6 @@ function createHandler(config = {}) {
     if (!next) throw new Error('项目不存在');
     current = next;
     proceduresDir = next.proceduresDir;
-    ensureProcedures();
     library = null;
     return next;
   }
@@ -264,10 +301,53 @@ function createHandler(config = {}) {
       return sendJson(res, 200, { project: projectView(next) });
     }
 
-    const lib = getLibrary();
+    const initialized = fs.existsSync(proceduresDir);
+    const conversation = hasRealConversation(current);
+    const canRead = initialized || !current.dsh || current.configured || current.demo || conversation;
+
+    if (!canRead && req.method === 'GET') {
+      if (api === '/state') {
+        return sendJson(res, 200, {
+          workspace: current.root,
+          project: projectView(current),
+          proceduresDir,
+          cards: 0,
+          bytes: 0,
+          layers: {},
+          initialized: false,
+          conversation: false,
+        });
+      }
+      if (api === '/cards') {
+        return sendJson(res, 200, {
+          q: url.searchParams.get('q') ?? '',
+          layer: url.searchParams.get('layer') ?? '',
+          count: 0,
+          cards: [],
+          terms: [],
+          handles: [],
+          phrases: [],
+        });
+      }
+      if (api === '/card') return sendJson(res, 404, { error: 'card not found' });
+      if (api === '/inbox') return sendJson(res, 200, { items: [] });
+      if (api === '/template') {
+        const file = path.join(packageRoot, 'templates', 'card-template.md');
+        return sendJson(res, 200, { template: fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '' });
+      }
+    }
+    if (!canRead && req.method === 'POST' && api === '/audit') {
+      return sendJson(res, 200, {
+        available: false,
+        error: '这个项目还没有开始过真实对话；发送第一条消息后自动建库',
+      });
+    }
+
     if (req.method !== 'GET' && current.demo && api !== '/audit') {
       return sendJson(res, 400, { error: '示例项目只读；请先切换到你的项目' });
     }
+
+    const lib = getLibrary(req.method !== 'GET' && api !== '/audit');
 
     if (req.method === 'GET' && api === '/state') {
       const cards = lib.all();
@@ -278,6 +358,8 @@ function createHandler(config = {}) {
         cards: cards.length,
         bytes: cards.reduce((n, card) => n + card.bytes, 0),
         layers: Object.fromEntries(lib.layers()),
+        initialized: true,
+        conversation,
       });
     }
 

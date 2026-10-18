@@ -10,6 +10,8 @@ const state = {
   layer: '',
   projects: [],
   project: null,
+  initialized: true,
+  conversation: true,
   audit: null,
   auditByCard: new Map(),
   searchMeta: { terms: [], handles: [], phrases: [] },
@@ -235,6 +237,8 @@ async function switchProject(id, { reload = true, notify = true } = {}) {
 async function loadState() {
   const data = await api('api/state');
   if (data.project) state.project = data.project;
+  state.initialized = data.initialized !== false;
+  state.conversation = data.conversation !== false;
   renderProjects();
   $('workspace').textContent = state.project?.name || data.proceduresDir;
   $('stat').textContent = `${data.cards} 张卡 · ${formatBytes(data.bytes)}`;
@@ -246,9 +250,11 @@ function renderList() {
   list.innerHTML = '';
   $('search-count').textContent = state.q ? `${state.cards.length} 命中` : '';
   if (!state.cards.length) {
-    empty.textContent = state.q || state.layer
-      ? '当前项目里没有匹配的卡片'
-      : `「${state.project?.name ?? '当前项目'}」还没有经验卡；按 N 新建，或在上方切换项目。`;
+    empty.textContent = !state.initialized
+      ? `「${state.project?.name ?? '当前项目'}」还没有开始过真实对话；发一条消息后会自动建库。`
+      : state.q || state.layer
+        ? '当前项目里没有匹配的卡片'
+        : `「${state.project?.name ?? '当前项目'}」还没有经验卡；按 N 新建，或在上方切换项目。`;
     empty.classList.remove('hidden');
     return;
   }

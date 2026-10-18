@@ -17,7 +17,7 @@
   `工具-pnpm版本不存在.md`；
 - `node workbench/test.mjs`：10 tests / 10 pass / 0 fail；
 - `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail；
-- `node workbench/test-plugin.mjs`：5 tests / 5 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换 + 新工作区自动建库 + 幂等性）；
+- `node workbench/test-plugin.mjs`：5 tests / 5 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换 + 对话后建库 + 幂等性）；
 - `node workbench/test-init.mjs`：1 test / 1 pass / 0 fail（跨 agent CLI init 幂等、不覆盖）；
 - Codex 插件：`validate_plugin.py` 通过；`open.mjs` / `stop.mjs` 实际启动/停止通过。
 
@@ -36,7 +36,8 @@
 - 实际 DSH 里通过插件管理器关闭/开启 `dsh-experience-workbench` 重载了服务端，无需重启整个应用；
 - 实际页面项目条列出 6 个项目，`示例项目` 3 张卡，`default-workspace` 0 张；
 - 实际页面验证：徽标显示 `原理`，详情显示“复核层”，收件箱/审计互斥；
-- 自动建库测试：临时 DSH_HOME 新增 workspace 后，watcher 创建 `procedures/_inbox.md`、`_layers.md`、`_模板.md`；
+- 自动建库测试：临时 DSH_HOME 新增 workspace 后**不**立即建；写入第一条真实 session 消息后才创建 `procedures/_inbox.md`、`_layers.md`、`_模板.md`；
+- 只打开未对话项目的 `/api/state` 返回 `initialized:false`，不创建目录；
 - 重复执行 `ensureProjectLibrary` 不覆盖用户改过的 `_inbox.md`；
 - `node workbench/cli.mjs init --workspace .` 已可用于 Codex/Claude Code，不依赖 DSH；
 - Codex 插件 `codex-plugin/procedures-workbench` 通过 `validate_plugin.py`；

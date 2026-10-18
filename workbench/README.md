@@ -65,7 +65,9 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
 
 ## 自动建库
 
-新 workspace 登记到 `workspace.json` 时，插件文件监听会为它创建一次骨架：
+新 workspace 单独出现在 `workspace.json` 时**不会**建库。插件会等这个 workspace
+完成一次真实会话（`session_projcache` 中该 session 的
+`record.rows.titleInput.val.count > 0`，即用户已经发过消息）后才创建一次骨架：
 
 ```text
 procedures/
@@ -74,8 +76,11 @@ procedures/
   _模板.md
 ```
 
-不调用模型、不读 skill、不消耗 token；只检查文件是否存在，存在就跳过、不覆盖。
-第一次打开“经验库”或切换项目时也会再兜底检查当前项目。
+只打开“经验库”或只切换到一个没有对话的项目，也不会自动建库，会显示
+“还没有开始过真实对话”。
+
+不调用模型、不读 skill、不消耗 token；建库后只补缺失文件，存在就跳过、不覆盖。
+显式 `init` 或手动新建卡片仍可以提前建库。
 
 ## 非 DSH 初始化
 

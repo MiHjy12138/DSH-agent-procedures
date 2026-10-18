@@ -127,7 +127,7 @@ test('project switch scopes cards to the selected workspace', async () => {
   fs.mkdirSync(path.join(workspaceA, 'procedures'), { recursive: true });
   fs.mkdirSync(workspaceB, { recursive: true });
   fs.writeFileSync(path.join(workspaceA, 'procedures', 'A-卡.md'), '# A-卡\n\n> **触发**：A 项目现象\n', 'utf8');
-  fs.mkdirSync(path.join(home, 'storages'), { recursive: true });
+  fs.mkdirSync(path.join(home, 'storages', 'session_projcache', 'sessions'), { recursive: true });
   fs.writeFileSync(path.join(home, 'storages', 'workspace.json'), JSON.stringify({
     tables: {
       workspaces: {
@@ -170,7 +170,19 @@ test('project switch scopes cards to the selected workspace', async () => {
     assert.equal(switched.project.id, 'b');
     const bState = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
     assert.equal(bState.cards, 0);
+    assert.equal(bState.initialized, false);
     assert.equal(bState.project.proceduresDir, path.join(workspaceB, 'procedures'));
+    assert.equal(fs.existsSync(path.join(workspaceB, 'procedures')), false);
+
+    fs.writeFileSync(path.join(home, 'storages', 'session_projcache', 'sessions', 'session-b.json'), JSON.stringify({
+      version: 7,
+      record: { identity: { cwd: workspaceB }, rows: { titleInput: { val: { count: 1 } } } },
+    }), 'utf8');
+    const workspaceData = JSON.parse(fs.readFileSync(path.join(home, 'storages', 'workspace.json'), 'utf8'));
+    workspaceData.tables.workspaces.b.sessionIds = ['session-b'];
+    fs.writeFileSync(path.join(home, 'storages', 'workspace.json'), JSON.stringify(workspaceData), 'utf8');
+    const bReady = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
+    assert.equal(bReady.initialized, true);
     assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_inbox.md')));
     assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_layers.md')));
     assert.ok(fs.existsSync(path.join(workspaceB, 'procedures', '_模板.md')));
@@ -191,20 +203,24 @@ test('project switch scopes cards to the selected workspace', async () => {
   }
 });
 
-test('workspace watcher initializes a newly added workspace once', async () => {
+test('workspace watcher waits for a real conversation before initializing', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'exp-watch-'));
   const workspaceA = path.join(home, 'workspaces', 'a');
   const workspaceB = path.join(home, 'workspaces', 'b');
   fs.mkdirSync(workspaceA, { recursive: true });
   fs.mkdirSync(workspaceB, { recursive: true });
   const storages = path.join(home, 'storages');
-  fs.mkdirSync(storages, { recursive: true });
+  fs.mkdirSync(path.join(storages, 'session_projcache', 'sessions'), { recursive: true });
   const workspaceFile = path.join(storages, 'workspace.json');
-  const writeWorkspaces = (includeB) => {
+  const writeWorkspaces = (includeB, withSession = false) => {
     const workspaces = {
       a: { title: 'default-workspace', path: workspaceA },
     };
-    if (includeB) workspaces.b = { title: '新项目', path: workspaceB };
+    if (includeB) workspaces.b = {
+      title: '新项目',
+      path: workspaceB,
+      ...(withSession ? { sessionIds: ['session-b'] } : {}),
+    };
     fs.writeFileSync(workspaceFile, JSON.stringify({ tables: { workspaces } }), 'utf8');
   };
   writeWorkspaces(false);
@@ -223,6 +239,15 @@ test('workspace watcher initializes a newly added workspace once', async () => {
   apply(ctx, {});
   try {
     writeWorkspaces(true);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.equal(fs.existsSync(path.join(workspaceB, 'procedures', '_inbox.md')), false);
+
+    fs.writeFileSync(path.join(storages, 'session_projcache', 'sessions', 'session-b.json'), JSON.stringify({
+      version: 7,
+      record: { identity: { cwd: workspaceB }, rows: { titleInput: { val: { count: 1 } } } },
+    }), 'utf8');
+    writeWorkspaces(true, true);
+
     const started = Date.now();
     let initialized = false;
     while (Date.now() - started < 2500) {
