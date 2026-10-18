@@ -50,6 +50,16 @@ test('UI: search, edit, conflict draft, layer create, audit', { skip: canRun ? f
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
     await page.waitForSelector('.card-item');
     assert.equal(await page.locator('.card-item').count(), 3);
+    assert.equal(await page.inputValue('#project-select'), 'local');
+    assert.match(await page.textContent('#project-path'), /procedures/);
+
+    await page.click('#inbox-btn');
+    await page.waitForSelector('#inbox-panel:not(.hidden)');
+    await page.click('#audit-btn');
+    await page.waitForSelector('#audit-panel:not(.hidden)');
+    await page.waitForFunction(() => document.getElementById('inbox-panel').classList.contains('hidden'));
+    await page.click('#audit-btn');
+    await page.waitForFunction(() => document.getElementById('audit-panel').classList.contains('hidden'));
 
     await page.fill('#search', '网页');
     await page.waitForFunction(() => document.querySelectorAll('.card-item').length === 1);
@@ -76,7 +86,10 @@ test('UI: search, edit, conflict draft, layer create, audit', { skip: canRun ? f
     await page.click('#save-btn');
     await page.waitForTimeout(250);
     assert.match(await page.textContent('#dirty'), /草稿/);
-    assert.ok((await page.evaluate(() => localStorage.getItem('exp:draft:抓取-网页空壳.md')))?.includes('ui-draft'));
+    const drafts = await page.evaluate(() => Object.keys(localStorage)
+      .filter((key) => key.startsWith('exp:draft:') && key.endsWith('抓取-网页空壳.md'))
+      .map((key) => localStorage.getItem(key)));
+    assert.ok(drafts.some((value) => value?.includes('ui-draft')));
 
     await page.click('#cancel-btn');
     await page.waitForSelector('#draft-banner:not(.hidden)');

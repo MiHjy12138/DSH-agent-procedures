@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLibrary, META } from '../lib.mjs';
@@ -11,14 +12,100 @@ const PREFIX = '/plugins/experience-workbench';
 export const name = 'dsh-experience-workbench';
 export const inject = ['webServer'];
 
-function resolveProceduresDir(config) {
-  const configured = typeof config?.proceduresDir === 'string' ? config.proceduresDir.trim() : '';
-  if (configured) return path.resolve(configured);
-  const candidates = [
-    path.join(process.cwd(), 'procedures'),
-    path.join(packageRoot, 'fixtures', 'procedures'),
-  ];
-  return candidates.find((dir) => fs.existsSync(dir)) ?? candidates[0];
+function readDshProjects() {
+  const dshHome = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
+  const file = path.join(dshHome, 'storages', 'workspace.json');
+  if (!fs.existsSync(file)) return [];
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const raw = parsed?.tables?.workspaces ?? {};
+    return Object.keys(raw)
+      .map((id) => {
+        const item = raw[id] ?? {};
+        if (typeof item.path !== 'string' || !item.path) return null;
+        const root = path.resolve(item.path);
+        if (!fs.existsSync(root)) return null;
+        const proceduresDir = path.join(root, 'procedures');
+        return {
+          id,
+          name: item.title || path.basename(root),
+          root,
+          proceduresDir,
+          hasProcedures: fs.existsSync(proceduresDir),
+          dsh: true,
+        };
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function buildProjects(config = {}) {
+  const projects = [];
+  const seen = new Set();
+  const add = (project) => {
+    if (!project || seen.has(project.proceduresDir)) return;
+    seen.add(project.proceduresDir);
+    projects.push(project);
+  };
+
+  const configured = typeof config.proceduresDir === 'string' ? config.proceduresDir.trim() : '';
+  if (configured) {
+    const proceduresDir = path.resolve(configured);
+    add({
+      id: 'configured',
+      name: '本地配置',
+      root: path.dirname(proceduresDir),
+      proceduresDir,
+      hasProcedures: fs.existsSync(proceduresDir),
+      configured: true,
+    });
+  }
+
+  for (const project of readDshProjects()) add(project);
+
+  const demoDir = path.join(packageRoot, 'fixtures', 'procedures');
+  if (fs.existsSync(demoDir)) {
+    add({
+      id: 'demo',
+      name: '示例项目',
+      root: packageRoot,
+      proceduresDir: demoDir,
+      hasProcedures: true,
+      demo: true,
+    });
+  }
+
+  if (!projects.length) {
+    add({
+      id: 'local',
+      name: path.basename(process.cwd()) || '当前项目',
+      root: process.cwd(),
+      proceduresDir: path.join(process.cwd(), 'procedures'),
+      hasProcedures: false,
+    });
+  }
+
+  return projects;
+}
+
+function chooseProject(projects, config = {}) {
+  if (config.proceduresDir) return projects.find((project) => project.configured);
+  const defaultWorkspace = projects.find((project) => project.name === 'default-workspace');
+  const withProcedures = projects.find((project) => project.hasProcedures);
+  return defaultWorkspace || withProcedures || projects[0];
+}
+
+function projectView(project) {
+  return {
+    id: project.id,
+    name: project.name,
+    root: project.root,
+    proceduresDir: project.proceduresDir,
+    hasProcedures: project.hasProcedures,
+    demo: Boolean(project.demo),
+  };
 }
 
 function sendJson(res, status, value) {
@@ -61,12 +148,33 @@ function writeAtomic(file, content) {
 }
 
 function createHandler(config = {}) {
-  const proceduresDir = resolveProceduresDir(config);
+  const projects = buildProjects(config);
+  let current = chooseProject(projects, config);
+  let proceduresDir = current.proceduresDir;
   let library = null;
+
+  function ensureProcedures() {
+    if (fs.existsSync(proceduresDir)) return;
+    if (!fs.existsSync(current.root)) throw new Error(`项目目录不存在：${current.root}`);
+    fs.mkdirSync(proceduresDir, { recursive: true });
+    current.hasProcedures = true;
+  }
+
   const getLibrary = () => {
+    ensureProcedures();
     if (!library) library = createLibrary(proceduresDir, packageRoot);
     return library;
   };
+
+  function selectProject(id) {
+    const next = projects.find((project) => project.id === id);
+    if (!next) throw new Error('项目不存在');
+    current = next;
+    proceduresDir = next.proceduresDir;
+    ensureProcedures();
+    library = null;
+    return next;
+  }
 
   function safeCardPath(file) {
     if (typeof file !== 'string' || !file.trim() || file.includes('\0')) throw new Error('非法文件名');
@@ -106,13 +214,31 @@ function createHandler(config = {}) {
   }
 
   async function handleApi(req, res, sub, url) {
-    const lib = getLibrary();
     const api = sub.slice('/api'.length);
+
+    if (req.method === 'GET' && api === '/projects') {
+      return sendJson(res, 200, {
+        projects: projects.map(projectView),
+        current: projectView(current),
+      });
+    }
+
+    if (req.method === 'POST' && api === '/project') {
+      const body = await readBody(req);
+      const next = selectProject(String(body.id ?? ''));
+      return sendJson(res, 200, { project: projectView(next) });
+    }
+
+    const lib = getLibrary();
+    if (req.method !== 'GET' && current.demo && api !== '/audit') {
+      return sendJson(res, 400, { error: '示例项目只读；请先切换到你的项目' });
+    }
 
     if (req.method === 'GET' && api === '/state') {
       const cards = lib.all();
       return sendJson(res, 200, {
-        workspace: path.dirname(proceduresDir),
+        workspace: current.root,
+        project: projectView(current),
         proceduresDir,
         cards: cards.length,
         bytes: cards.reduce((n, card) => n + card.bytes, 0),

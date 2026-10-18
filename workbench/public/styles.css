@@ -57,6 +57,41 @@ kbd {
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 260px; }
+.project-bar {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+.project-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.project-bar .select {
+  height: 28px;
+  min-width: 170px;
+  max-width: 300px;
+  padding: 0 26px 0 8px;
+  font-size: 11.5px;
+}
+.project-path {
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+.project-note { margin-left: auto; color: var(--faint); font-size: 10.5px; white-space: nowrap; }
 .brand-mark {
   width: 30px; height: 30px;
   display: grid; place-items: center;
@@ -156,7 +191,7 @@ kbd {
 
 /* layout */
 .layout {
-  height: calc(100vh - 64px);
+  height: calc(100vh - 106px);
   display: grid;
   grid-template-columns: 330px minmax(0, 1fr);
 }
@@ -317,8 +352,9 @@ mark {
   font-size: 11px;
 }
 .meta-row strong { color: var(--text); font-weight: 600; }
-.meta-row .select { height: 25px; padding: 0 4px; font-size: 10.5px; margin-left: 3px; }
+.meta-row .select { height: 25px; padding: 0 22px 0 4px; font-size: 10.5px; margin-left: 3px; max-width: 150px; }
 .field select.select { width: 100%; height: 36px; }
+.field-hint { display: block; margin-top: 5px; color: var(--faint); font-size: 10.5px; line-height: 1.4; }
 .draft-banner {
   display: flex;
   align-items: center;
@@ -578,7 +614,10 @@ mark {
   .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
   .top-actions { gap: 5px; }
   .top-actions .btn { padding: 0 8px; }
-  .layout { height: auto; min-height: calc(100vh - 120px); grid-template-columns: 1fr; }
+  .project-bar { height: auto; flex-wrap: wrap; padding: 8px 12px; gap: 6px; }
+  .project-path { max-width: 70vw; }
+  .project-note { display: none; }
+  .layout { height: auto; min-height: calc(100vh - 160px); grid-template-columns: 1fr; }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); max-height: 42vh; }
   .card { padding: 20px 16px 60px; }
   .welcome { margin-top: 40px; padding: 0 20px; }

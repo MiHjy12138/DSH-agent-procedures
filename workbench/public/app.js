@@ -8,6 +8,8 @@ const state = {
   dirty: false,
   q: '',
   layer: '',
+  projects: [],
+  project: null,
   audit: null,
   auditByCard: new Map(),
   searchMeta: { terms: [], handles: [], phrases: [] },
@@ -15,6 +17,20 @@ const state = {
   inbox: [],
   newFileTouched: false,
 };
+
+const LAYERS = {
+  fixed: { short: '原理', long: '原理稳定，长期不变' },
+  env: { short: '环境', long: '换环境/版本/路径要复核' },
+  task: { short: '任务', long: '只对当前任务成立' },
+};
+
+function layerShort(layer) {
+  return LAYERS[layer]?.short ?? layer;
+}
+
+function layerTitle(layer) {
+  return LAYERS[layer] ? `复核层：${layer} — ${LAYERS[layer].long}` : '复核层未设置';
+}
 
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -158,13 +174,69 @@ function formatBytes(bytes) {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
-function badge(text, cls = '') {
-  return `<span class="badge ${cls}">${escapeHtml(text)}</span>`;
+function badge(text, cls = '', title = '') {
+  const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+  return `<span class="badge ${cls}"${safeTitle}>${escapeHtml(text)}</span>`;
+}
+
+async function loadProjects() {
+  const data = await api('api/projects');
+  state.projects = data.projects ?? [];
+  state.project = data.current ?? state.projects[0] ?? null;
+  renderProjects();
+}
+
+function renderProjects() {
+  const select = $('project-select');
+  if (!select) return;
+  select.innerHTML = '';
+  for (const project of state.projects) {
+    const option = document.createElement('option');
+    option.value = project.id;
+    option.textContent = project.demo ? `${project.name}（只读示例）` : project.name;
+    option.title = project.proceduresDir;
+    select.appendChild(option);
+  }
+  if (state.project) select.value = state.project.id;
+  select.title = state.project?.proceduresDir ?? '';
+  $('project-path').textContent = state.project?.proceduresDir ?? '';
+  if (state.project) $('workspace').textContent = state.project.name;
+}
+
+async function switchProject(id, { reload = true, notify = true } = {}) {
+  if (!id || id === state.project?.id) return;
+  const data = await api('api/project', {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+  });
+  state.project = data.project;
+  state.cards = [];
+  state.card = null;
+  state.selected = null;
+  state.editing = false;
+  state.dirty = false;
+  state.draft = null;
+  state.audit = null;
+  state.auditByCard = new Map();
+  localStorage.setItem('exp:project', id);
+  closeInbox();
+  closeAudit();
+  $('card').classList.add('hidden');
+  $('welcome').classList.remove('hidden');
+  renderProjects();
+  if (reload) {
+    await loadState();
+    await loadCards();
+    await loadAudit();
+  }
+  if (notify) toast(`已切换项目：${state.project.name}`);
 }
 
 async function loadState() {
   const data = await api('api/state');
-  $('workspace').textContent = data.proceduresDir;
+  if (data.project) state.project = data.project;
+  renderProjects();
+  $('workspace').textContent = state.project?.name || data.proceduresDir;
   $('stat').textContent = `${data.cards} 张卡 · ${formatBytes(data.bytes)}`;
 }
 
@@ -174,6 +246,9 @@ function renderList() {
   list.innerHTML = '';
   $('search-count').textContent = state.q ? `${state.cards.length} 命中` : '';
   if (!state.cards.length) {
+    empty.textContent = state.q || state.layer
+      ? '当前项目里没有匹配的卡片'
+      : `「${state.project?.name ?? '当前项目'}」还没有经验卡；按 N 新建，或在上方切换项目。`;
     empty.classList.remove('hidden');
     return;
   }
@@ -186,7 +261,7 @@ function renderList() {
     button.innerHTML = `
       <div class="row">
         <strong>${highlight(card.title)}</strong>
-        ${card.layer ? badge(card.layer, card.layer) : ''}
+        ${card.layer ? badge(layerShort(card.layer), card.layer, layerTitle(card.layer)) : ''}
         ${issues.p0 ? `<span class="badge danger">P0</span>` : ''}
         ${issues.p1 && !issues.p0 ? `<span class="badge warn">P1</span>` : ''}
       </div>
@@ -278,7 +353,7 @@ async function selectCard(file) {
 }
 
 function draftKey(file) {
-  return `exp:draft:${file}`;
+  return `exp:draft:${state.project?.id ?? 'local'}:${file}`;
 }
 
 function renderDraftBanner() {
@@ -295,7 +370,7 @@ function renderCard() {
   $('card-title').textContent = card.title;
   $('card-path').textContent = card.file;
   $('card-badges').innerHTML = [
-    card.layer ? badge(card.layer, card.layer) : '',
+    card.layer ? badge(layerShort(card.layer), card.layer, layerTitle(card.layer)) : '',
     card.status ? badge(card.status, 'status') : '',
     badge(formatBytes(card.bytes)),
   ].join('');
@@ -303,12 +378,12 @@ function renderCard() {
     <span><strong>文件</strong> <code>${escapeHtml(card.file)}</code></span>
     <span><strong>更新</strong> ${relativeTime(card.updated)}</span>
     <span><strong>大小</strong> ${formatBytes(card.bytes)}</span>
-    <span><strong>层</strong>
-      <select id="card-layer" class="select">
-        <option value="">未分层</option>
-        <option value="fixed">fixed</option>
-        <option value="env">env</option>
-        <option value="task">task</option>
+    <span><strong>复核层</strong>
+      <select id="card-layer" class="select" title="决定这张卡什么时候需要重看">
+        <option value="">未设置</option>
+        <option value="fixed">fixed — 原理稳定</option>
+        <option value="env">env — 环境/版本</option>
+        <option value="task">task — 任务型</option>
       </select>
     </span>
   `;
@@ -324,7 +399,7 @@ function renderCard() {
       renderCard();
       await loadCards();
       await loadAudit();
-      toast('层已更新');
+      toast('复核层已更新');
     } catch (error) {
       toast(error.message);
       layerSelect.value = card.layer || '';
@@ -402,6 +477,8 @@ async function saveEdit() {
 }
 
 function openNew(prefill = '') {
+  closeInbox();
+  closeAudit();
   state.newFileTouched = false;
   $('new-file').value = '';
   $('new-trigger').value = prefill;
@@ -496,6 +573,8 @@ async function createCard() {
 }
 
 async function openInbox() {
+  if (!$('inbox-panel').classList.contains('hidden')) return closeInbox();
+  closeAudit();
   $('inbox-panel').classList.remove('hidden');
   await loadInbox();
 }
@@ -549,6 +628,8 @@ function closeInbox() {
 }
 
 async function openAudit() {
+  if (!$('audit-panel').classList.contains('hidden')) return closeAudit();
+  closeInbox();
   $('audit-panel').classList.remove('hidden');
   $('audit-sub').textContent = '运行中…';
   $('audit-body').innerHTML = '<div class="audit-empty">正在检查卡片…</div>';
@@ -687,6 +768,12 @@ function bind() {
     state.layer = $('layer-filter').value;
     loadCards();
   });
+  $('project-select').addEventListener('change', () => {
+    switchProject($('project-select').value).catch((error) => {
+      toast(error.message);
+      renderProjects();
+    });
+  });
   $('inbox-input').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') addInbox();
   });
@@ -744,6 +831,19 @@ async function main() {
     if (initialQuery) {
       state.q = initialQuery;
       $('search').value = initialQuery;
+    }
+    try {
+      await loadProjects();
+    } catch {
+      // Older plugin server without the project endpoint: keep the page usable, hide the switcher.
+      $('project-bar').classList.add('hidden');
+      state.project = { id: 'legacy', name: '当前项目', proceduresDir: '' };
+    }
+    const savedProject = localStorage.getItem('exp:project');
+    if (savedProject && savedProject !== state.project?.id && state.projects.some((project) => project.id === savedProject)) {
+      try {
+        await switchProject(savedProject, { reload: false, notify: false });
+      } catch { /* keep server default if the saved project disappeared */ }
     }
     await loadState();
     await loadCards();

@@ -18,6 +18,13 @@ const proceduresDir = path.resolve(arg('--procedures', path.join(workspace, 'pro
 const host = arg('--host', '127.0.0.1');
 const port = Number(arg('--port', '4177'));
 const publicDir = path.join(here, 'public');
+const project = {
+  id: 'local',
+  name: path.basename(workspace) || '当前项目',
+  root: workspace,
+  proceduresDir,
+  hasProcedures: fs.existsSync(proceduresDir),
+};
 
 let lib;
 try {
@@ -109,10 +116,21 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/app.js') return sendStatic(res, 'app.js');
     if (req.method === 'GET' && p === '/styles.css') return sendStatic(res, 'styles.css');
 
+    if (req.method === 'GET' && p === '/api/projects') {
+      return sendJson(res, 200, { projects: [project], current: project });
+    }
+
+    if (req.method === 'POST' && p === '/api/project') {
+      const body = await readBody(req);
+      if (body.id && body.id !== project.id) return sendJson(res, 404, { error: 'project not found' });
+      return sendJson(res, 200, { project });
+    }
+
     if (req.method === 'GET' && p === '/api/state') {
       const cards = lib.all();
       return sendJson(res, 200, {
         workspace,
+        project,
         proceduresDir,
         cards: cards.length,
         bytes: cards.reduce((n, card) => n + card.bytes, 0),

@@ -17,7 +17,7 @@
   `工具-pnpm版本不存在.md`；
 - `node workbench/test.mjs`：10 tests / 10 pass / 0 fail；
 - `node workbench/test-api.mjs`：1 test / 1 pass / 0 fail；
-- `node workbench/test-plugin.mjs`：2 tests / 2 pass / 0 fail（prefix 路由 + 客户端 slot 注册）。
+- `node workbench/test-plugin.mjs`：3 tests / 3 pass / 0 fail（prefix 路由 + 客户端 slot + 项目切换隔离）。
 
 ## DSH 插件
 
@@ -27,7 +27,11 @@
 - 已用 `dsh plugin --profile desktop add link:<workbench>` 链接进 desktop profile；
 - 重启 DSH 后侧边栏“经验库”已出现，插件页面在 DSH 内可打开；
 - 实测 3 张卡、卡片详情、层选择、搜索入口正常；
-- 修复了插件前缀下 `loadCards/loadCard` 仍写死 `/api/...` 导致的 404，改为相对 `api/...`。
+- 修复了插件前缀下 `loadCards/loadCard` 仍写死 `/api/...` 导致的 404，改为相对 `api/...`；
+- 新增项目 API：读 DSH `workspace.json`，按项目切换 `procedures/`；示例项目只读；
+- 新增复核层中文标签、收件箱/审计互斥、顶部按钮说明；
+- 项目切换测试使用临时 DSH_HOME：A 项目 1 张卡、切到 B 变 0 张、切回 A 恢复；
+- 这些服务端改动需要下一次重启 DSH 才能在实际插件页面生效。
 
 ## UI 回归
 
@@ -38,7 +42,9 @@
 - 编辑保存；
 - 外部修改冲突、草稿保留、恢复/丢弃；
 - 新建卡片并写入 `_layers.md`；
-- 审计面板 P0/P1。
+- 审计面板 P0/P1；
+- 项目条和当前项目路径；
+- 收件箱/审计互斥：打开一个会收起另一个。
 
 DSH 内目测：已通过侧边栏“经验库”打开插件页面，卡片列表和详情可见。
 自动回归仍作为辅助证据。
@@ -47,6 +53,7 @@ DSH 内目测：已通过侧边栏“经验库”打开插件页面，卡片列�
 
 - 暂无删除/重命名卡片；
 - 暂无 MCP；
-- 仅单项目；不跨项目；
+- 项目来自 DSH `workspace.json`；未做手动路径输入；
+- 空项目首次打开会创建空的 `procedures/`；
 - 草稿依赖浏览器 localStorage；
 - UI 自动回归依赖本机 Playwright/Edge，应用本身零依赖。

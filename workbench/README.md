@@ -37,8 +37,17 @@ dsh plugin --profile desktop add link:C:\path\to\workbench
         proceduresDir: "C:\path\to\project\procedures"
 ```
 
-`proceduresDir` 留空时：优先当前工作目录的 `procedures/`，再退到包内
-`fixtures/procedures/` 演示数据。插件不跨项目、不写回、不接外部记忆。
+`proceduresDir` 留空时：项目条列出 DSH 工作区，默认进入 `default-workspace`；
+包内 `fixtures/procedures/` 作为只读的“示例项目”。插件不跨项目、不写回、不接外部记忆。
+
+## 项目
+
+顶部“当前项目”条会列出 DSH 工作区（读 `~/.dsh/storages/workspace.json`）和只读的
+“示例项目”。每个项目只读自己的 `procedures/`，搜索、审计、收件箱、草稿都按当前项目隔离；
+不会把多个项目的卡混在一个列表里。选择会记住在浏览器 localStorage。
+
+`proceduresDir` 配置存在时，会多一个“本地配置”项目并作为入口；默认进入
+`default-workspace`（没有卡就显示空状态，不是全局库）。
 
 ## CLI
 
@@ -73,11 +82,12 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ## 界面
 
 - 左侧搜索/筛选/列表，右侧 Markdown 预览；
-- 新建卡片：触发现象 + 首选 + 死路 + 验证 + 层（fixed/env/task）；
+- 新建卡片：触发现象 + 首选 + 死路 + 验证 + 复核层（fixed=原理 / env=环境 / task=任务）；
 - 编辑：原文 Markdown，保存到 `procedures/`；外部修改会检测冲突，不覆盖；
 - 草稿：编辑内容自动留在本地，冲突后也可恢复/丢弃；
 - 审计：复用 `tools/procedures-audit.mjs`，列表显示 P0/P1，抽屉看详情；
-- 收件箱：先记一行，稍后整理成卡；
+- 收件箱：先记一行，稍后整理成卡；收件箱和审计是互斥抽屉，打开一个会收起另一个；
+- 顶部按钮：收件箱、审计、新建卡片；悬停有说明；
 - 快捷键：`/` 搜索、`N` 新建、`E` 编辑、`J/K` 上下切换、`Ctrl/⌘+S` 保存、`Esc` 取消/关闭。
 
 ## 边界
@@ -92,7 +102,7 @@ node workbench/cli.mjs inbox --add "现象：一句话"
 ```powershell
 node workbench/test.mjs        # lib 搜索/分层/审计
 node workbench/test-api.mjs    # 保存冲突/原子写/分层/审计 API
-node workbench/test-plugin.mjs # DSH 插件 prefix 路由 + 客户端 slot 注册
+node workbench/test-plugin.mjs # DSH 插件 prefix 路由 + 客户端 slot + 项目切换隔离
 ```
 
 可选 UI 回归（需要本机 Edge + Playwright）：

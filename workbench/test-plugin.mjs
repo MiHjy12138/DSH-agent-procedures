@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -40,8 +41,20 @@ test('plugin server mounts under DSH webServer prefix', async () => {
     assert.match(html, /href="styles.css"/);
     assert.match(html, /src="app.js"/);
 
+    const projects = await (await fetch(`${base}/plugins/experience-workbench/api/projects`)).json();
+    assert.equal(projects.current.id, 'configured');
+    assert.ok(projects.projects.some((project) => project.id === 'configured'));
+
+    const missing = await fetch(`${base}/plugins/experience-workbench/api/project`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'missing-project' }),
+    });
+    assert.equal(missing.status, 400);
+
     const state = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
     assert.equal(state.cards, 3);
+    assert.equal(state.project.id, 'configured');
 
     const search = await (await fetch(`${base}/plugins/experience-workbench/api/cards?q=${encodeURIComponent('网页抓不到正文')}`)).json();
     assert.equal(search.count, 1);
@@ -101,4 +114,66 @@ test('client entry registers DSH sidebar and main slots', () => {
   const frame = main.component();
   assert.equal(frame.type, 'iframe');
   assert.equal(frame.props.src, '/plugins/experience-workbench/');
+});
+
+test('project switch scopes cards to the selected workspace', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'exp-dsh-home-'));
+  const workspaceA = path.join(home, 'workspaces', 'a');
+  const workspaceB = path.join(home, 'workspaces', 'b');
+  fs.mkdirSync(path.join(workspaceA, 'procedures'), { recursive: true });
+  fs.mkdirSync(workspaceB, { recursive: true });
+  fs.writeFileSync(path.join(workspaceA, 'procedures', 'A-卡.md'), '# A-卡\n\n> **触发**：A 项目现象\n', 'utf8');
+  fs.mkdirSync(path.join(home, 'storages'), { recursive: true });
+  fs.writeFileSync(path.join(home, 'storages', 'workspace.json'), JSON.stringify({
+    tables: {
+      workspaces: {
+        a: { title: 'default-workspace', path: workspaceA },
+        b: { title: 'B 项目', path: workspaceB },
+      },
+    },
+  }), 'utf8');
+
+  const previousHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = home;
+  const routes = [];
+  const ctx = {
+    effect(fn) { return fn(); },
+    webServer: { register(route) { routes.push(route); return () => {}; } },
+  };
+  apply(ctx, {});
+  const server = http.createServer((req, res) => routes[0].handler(req, res));
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const projects = await (await fetch(`${base}/plugins/experience-workbench/api/projects`)).json();
+    assert.equal(projects.current.id, 'a');
+    assert.equal(projects.current.name, 'default-workspace');
+    assert.equal(projects.current.proceduresDir, path.join(workspaceA, 'procedures'));
+
+    const aState = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
+    assert.equal(aState.cards, 1);
+
+    const switched = await (await fetch(`${base}/plugins/experience-workbench/api/project`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'b' }),
+    })).json();
+    assert.equal(switched.project.id, 'b');
+    const bState = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
+    assert.equal(bState.cards, 0);
+    assert.equal(bState.project.proceduresDir, path.join(workspaceB, 'procedures'));
+
+    await fetch(`${base}/plugins/experience-workbench/api/project`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'a' }),
+    });
+    const back = await (await fetch(`${base}/plugins/experience-workbench/api/state`)).json();
+    assert.equal(back.cards, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    if (previousHome === undefined) delete process.env.DSH_HOME;
+    else process.env.DSH_HOME = previousHome;
+    fs.rmSync(home, { recursive: true, force: true });
+  }
 });

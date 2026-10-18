@@ -22,21 +22,28 @@
       <span id="search-count" class="search-count"></span>
     </div>
     <div class="top-actions">
-      <button id="inbox-btn" class="btn ghost">收件箱</button>
-      <button id="audit-btn" class="btn ghost">审计</button>
-      <button id="new-btn" class="btn primary">新建卡片 <kbd>N</kbd></button>
+      <button id="inbox-btn" class="btn ghost" title="收件箱：先记一行，稍后整理成卡">收件箱</button>
+      <button id="audit-btn" class="btn ghost" title="审计：检查当前项目的 P0/P1 问题">审计</button>
+      <button id="new-btn" class="btn primary" title="新建经验卡（快捷键 N）">新建卡片 <kbd>N</kbd></button>
     </div>
   </header>
+
+  <div class="project-bar">
+    <span class="project-label">当前项目</span>
+    <select id="project-select" class="select" aria-label="切换项目"></select>
+    <span id="project-path" class="project-path"></span>
+    <span class="project-note">每个项目只读自己的 procedures/</span>
+  </div>
 
   <main class="layout">
     <aside class="sidebar">
       <div class="sidebar-head">
         <div class="stat" id="stat"></div>
-        <select id="layer-filter" class="select" aria-label="按层筛选">
-          <option value="">全部层</option>
-          <option value="fixed">fixed</option>
-          <option value="env">env</option>
-          <option value="task">task</option>
+        <select id="layer-filter" class="select" aria-label="按复核层筛选">
+          <option value="">全部复核层</option>
+          <option value="fixed">fixed · 原理稳定</option>
+          <option value="env">env · 环境/版本</option>
+          <option value="task">task · 任务型</option>
         </select>
       </div>
       <div id="list" class="list"></div>
@@ -134,13 +141,14 @@
           <input id="new-trigger" type="text" placeholder="任务描述里真的会出现的词" />
         </label>
         <label class="field">
-          <span>层</span>
+          <span>复核层 <em>决定什么时候要重看</em></span>
           <select id="new-layer" class="select">
-            <option value="">暂不分层</option>
-            <option value="fixed">fixed — 原理/语法</option>
-            <option value="env">env — 版本/路径</option>
-            <option value="task">task — 任务型</option>
+            <option value="">暂不设复核层</option>
+            <option value="fixed">fixed — 原理稳定，长期不变</option>
+            <option value="env">env — 换环境/版本/路径要复核</option>
+            <option value="task">task — 只对当前任务成立</option>
           </select>
+          <small class="field-hint">fixed=原理；env=环境；task=任务。拿不准选 env。</small>
         </label>
         <label class="field">
           <span>首选做法</span>
