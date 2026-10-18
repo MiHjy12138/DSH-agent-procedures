@@ -49,6 +49,7 @@ test('plugin server mounts under DSH webServer prefix', async () => {
 
     const app = await (await fetch(`${base}/plugins/experience-workbench/app.js`)).text();
     assert.match(app, /api\/cards/);
+    assert.doesNotMatch(app, /\/api\//);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

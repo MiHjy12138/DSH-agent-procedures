@@ -205,7 +205,7 @@ function renderList() {
 async function loadCards() {
   const q = encodeURIComponent(state.q);
   const layer = encodeURIComponent(state.layer);
-  const data = await api(`/api/cards?q=${q}&layer=${layer}`);
+  const data = await api(`api/cards?q=${q}&layer=${layer}`);
   state.cards = data.cards;
   state.searchMeta = {
     terms: data.terms ?? [],
@@ -267,7 +267,7 @@ async function selectCard(file) {
   if (state.editing && state.dirty) {
     if (!confirm('当前编辑未保存，确定切换？')) return;
   }
-  const card = await api(`/api/card?file=${encodeURIComponent(file)}`);
+  const card = await api(`api/card?file=${encodeURIComponent(file)}`);
   state.card = card;
   state.selected = file;
   state.editing = false;

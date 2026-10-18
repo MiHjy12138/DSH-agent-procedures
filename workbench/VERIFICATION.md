@@ -25,7 +25,9 @@
 - 服务端挂载到 `ctx.webServer`：`/plugins/experience-workbench/`；
 - 客户端注册 `sidebar.panellist`（经验库）与 `main`（iframe 工作台）；
 - 已用 `dsh plugin --profile desktop add link:<workbench>` 链接进 desktop profile；
-- 本次验证未重启 DSH，因此“重启后真实侧边栏/iframe 目测”仍待完成。
+- 重启 DSH 后侧边栏“经验库”已出现，插件页面在 DSH 内可打开；
+- 实测 3 张卡、卡片详情、层选择、搜索入口正常；
+- 修复了插件前缀下 `loadCards/loadCard` 仍写死 `/api/...` 导致的 404，改为相对 `api/...`。
 
 ## UI 回归
 
@@ -38,8 +40,8 @@
 - 新建卡片并写入 `_layers.md`；
 - 审计面板 P0/P1。
 
-DSH 内目测：工作台已在 DSH 后台运行，待通过 DSH 的浏览器/WebView 打开 4177 做最终人工确认。
-自动回归只作为辅助证据，不作为 DSH 内验收替代。
+DSH 内目测：已通过侧边栏“经验库”打开插件页面，卡片列表和详情可见。
+自动回归仍作为辅助证据。
 
 ## 已知限制
 
