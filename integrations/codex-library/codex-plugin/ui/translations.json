@@ -1,0 +1,327 @@
+{
+  "title": {
+    "zh-CN": "经验库查看器",
+    "zh-TW": "經驗庫檢視器",
+    "en": "Procedure cards"
+  },
+  "brand": {
+    "zh-CN": "经验卡",
+    "zh-TW": "經驗卡",
+    "en": "Procedure cards"
+  },
+  "tagline": {
+    "zh-CN": "保留有用的方法",
+    "zh-TW": "保留有用的方法",
+    "en": "Keep useful methods"
+  },
+  "exit": {
+    "zh-CN": "退出",
+    "zh-TW": "結束",
+    "en": "Exit"
+  },
+  "refresh": {
+    "zh-CN": "刷新",
+    "zh-TW": "重新整理",
+    "en": "Refresh"
+  },
+  "search": {
+    "zh-CN": "搜索卡片",
+    "zh-TW": "搜尋卡片",
+    "en": "Search cards"
+  },
+  "selected_project": {
+    "zh-CN": "所选项目",
+    "zh-TW": "所選專案",
+    "en": "Selected project"
+  },
+  "choose_directory": {
+    "zh-CN": "选择目录…",
+    "zh-TW": "選擇目錄…",
+    "en": "Choose folder…"
+  },
+  "central": {
+    "zh-CN": "中央库",
+    "zh-TW": "中央庫",
+    "en": "Central library"
+  },
+  "project": {
+    "zh-CN": "项目库",
+    "zh-TW": "專案庫",
+    "en": "Project library"
+  },
+  "cards": {
+    "zh-CN": "卡片",
+    "zh-TW": "卡片",
+    "en": "Cards"
+  },
+  "original": {
+    "zh-CN": "卡片原文",
+    "zh-TW": "卡片原文",
+    "en": "Card source"
+  },
+  "delete": {
+    "zh-CN": "删除卡片…",
+    "zh-TW": "刪除卡片…",
+    "en": "Delete card…"
+  },
+  "open_directory": {
+    "zh-CN": "打开目录",
+    "zh-TW": "開啟目錄",
+    "en": "Open folder"
+  },
+  "entry_title": {
+    "zh-CN": "经验库入口",
+    "zh-TW": "經驗庫入口",
+    "en": "Procedure cards launcher"
+  },
+  "open_cards": {
+    "zh-CN": "打开经验卡",
+    "zh-TW": "開啟經驗卡",
+    "en": "Open procedure cards"
+  },
+  "choose_project": {
+    "zh-CN": "请选择项目",
+    "zh-TW": "請選擇專案",
+    "en": "Choose a project"
+  },
+  "unsaved": {
+    "zh-CN": "项目选择未保存：{error}",
+    "zh-TW": "專案選擇未儲存：{error}",
+    "en": "Project selection not saved: {error}"
+  },
+  "select_guide": {
+    "zh-CN": "请选择项目：从“所选项目”下拉框或“选择目录…”指定项目根目录。",
+    "zh-TW": "請從「所選專案」或「選擇目錄…」指定專案根目錄。",
+    "en": "Choose a project from Selected project or Choose folder…."
+  },
+  "uninitialized": {
+    "zh-CN": "所选项目尚未初始化经验库。\n{path}\n工具不会自动创建目录。",
+    "zh-TW": "所選專案尚未初始化經驗庫。\n{path}\n工具不會自動建立目錄。",
+    "en": "This project has no procedure library yet.\n{path}\nFolders are not created automatically."
+  },
+  "project_prompt": {
+    "zh-CN": "项目库 · 请选择项目",
+    "zh-TW": "專案庫 · 請選擇專案",
+    "en": "Project library · Choose a project"
+  },
+  "card_count": {
+    "zh-CN": "{shown} / {total} 张卡片",
+    "zh-TW": "{shown} / {total} 張卡片",
+    "en": "{shown} / {total} cards"
+  },
+  "manual_project": {
+    "zh-CN": "所选项目需手动切换",
+    "zh-TW": "所選專案需手動切換",
+    "en": "Project selection is manual"
+  },
+  "personal_methods": {
+    "zh-CN": "个人通用方法",
+    "zh-TW": "個人通用方法",
+    "en": "Personal methods"
+  },
+  "empty": {
+    "zh-CN": "尚无经验卡",
+    "zh-TW": "尚無經驗卡",
+    "en": "No procedure cards yet"
+  },
+  "no_matches": {
+    "zh-CN": "没有匹配结果",
+    "zh-TW": "沒有符合的結果",
+    "en": "No matching cards"
+  },
+  "search_guide": {
+    "zh-CN": "可搜索标题、文件名或正文；多个词需同时出现。",
+    "zh-TW": "可搜尋標題、檔名或內文；多個詞需同時出現。",
+    "en": "Search titles, filenames or text. All search terms must match."
+  },
+  "read_guide": {
+    "zh-CN": "选择卡片后，在这里阅读",
+    "zh-TW": "選擇卡片後，在這裡閱讀",
+    "en": "Select a card to read it here"
+  },
+  "selected_library": {
+    "zh-CN": "所选项目库",
+    "zh-TW": "所選專案庫",
+    "en": "Selected project library"
+  },
+  "delete_title": {
+    "zh-CN": "删除经验卡",
+    "zh-TW": "刪除經驗卡",
+    "en": "Delete procedure card"
+  },
+  "delete_confirm": {
+    "zh-CN": "{library}\n文件：{name}\n完整路径：{path}\n\n将此卡移入 Windows 回收站，可从回收站恢复。是否继续？",
+    "zh-TW": "{library}\n檔案：{name}\n完整路徑：{path}\n\n將此卡移至 Windows 資源回收筒，可在其中還原。是否繼續？",
+    "en": "{library}\nFile: {name}\nFull path: {path}\n\nMove this card to the Windows Recycle Bin? You can restore it there."
+  },
+  "delete_cancelled": {
+    "zh-CN": "已取消删除，文件未改动。",
+    "zh-TW": "已取消刪除，檔案未變更。",
+    "en": "Deletion cancelled. The file was not changed."
+  },
+  "recycled": {
+    "zh-CN": "已移入回收站：{name} · {total} 张经验卡",
+    "zh-TW": "已移至資源回收筒：{name} · {total} 張經驗卡",
+    "en": "Moved to Recycle Bin: {name} · {total} cards"
+  },
+  "delete_failed": {
+    "zh-CN": "未完成删除",
+    "zh-TW": "未完成刪除",
+    "en": "Deletion not completed"
+  },
+  "folder_dialog": {
+    "zh-CN": "选择项目根目录（读取其 procedures 子目录）",
+    "zh-TW": "選擇專案根目錄（讀取其 procedures 子目錄）",
+    "en": "Choose a project root (reads its procedures folder)"
+  },
+  "missing_title": {
+    "zh-CN": "库目录不存在",
+    "zh-TW": "庫目錄不存在",
+    "en": "Library folder not found"
+  },
+  "no_create": {
+    "zh-CN": "{path}\n\n工具不会自动创建目录。",
+    "zh-TW": "{path}\n\n工具不會自動建立目錄。",
+    "en": "{path}\n\nFolders are not created automatically."
+  },
+  "select_first": {
+    "zh-CN": "请先选择项目。",
+    "zh-TW": "請先選擇專案。",
+    "en": "Choose a project first."
+  },
+  "invalid_target": {
+    "zh-CN": "仅允许删除所选库直接包含的经验卡。",
+    "zh-TW": "只允許刪除所選庫直接包含的經驗卡。",
+    "en": "Only cards directly inside the selected library can be deleted."
+  },
+  "unsafe_target": {
+    "zh-CN": "不能删除目录、链接或库外文件。",
+    "zh-TW": "不能刪除目錄、連結或庫外檔案。",
+    "en": "Folders, links and files outside the library cannot be deleted."
+  },
+  "fixed_drive": {
+    "zh-CN": "仅支持本机固定磁盘上的回收站操作。",
+    "zh-TW": "僅支援本機固定磁碟上的資源回收筒操作。",
+    "en": "Recycle Bin operations require a local fixed drive."
+  },
+  "recycle_error": {
+    "zh-CN": "回收站操作未完成（返回码 {result}，已取消 {aborted}）。",
+    "zh-TW": "資源回收筒操作未完成（傳回碼 {result}，已取消 {aborted}）。",
+    "en": "Recycle Bin operation incomplete (code {result}, cancelled {aborted})."
+  },
+  "file_remains": {
+    "zh-CN": "文件仍存在，不能确认已移入回收站。",
+    "zh-TW": "檔案仍存在，無法確認已移至資源回收筒。",
+    "en": "The file still exists; recycling could not be confirmed."
+  },
+  "projects_empty": {
+    "zh-CN": "没有可用的已登记项目，可选择目录。",
+    "zh-TW": "沒有可用的已登記專案，可選擇目錄。",
+    "en": "No registered projects. Choose a folder instead."
+  },
+  "projects_error": {
+    "zh-CN": "无法读取已登记项目，可选择目录。（{error}）",
+    "zh-TW": "無法讀取已登記專案，可選擇目錄。（{error}）",
+    "en": "Cannot read registered projects. Choose a folder instead. ({error})"
+  },
+  "missing_library": {
+    "zh-CN": "该库目录不存在；工具不会自动创建。",
+    "zh-TW": "此庫目錄不存在；工具不會自動建立。",
+    "en": "This library folder does not exist. It is not created automatically."
+  },
+  "list_error": {
+    "zh-CN": "无法列出目录：{error}",
+    "zh-TW": "無法列出目錄：{error}",
+    "en": "Cannot list folder: {error}"
+  },
+  "read_error": {
+    "zh-CN": "无法读取此文件：{error}",
+    "zh-TW": "無法讀取此檔案：{error}",
+    "en": "Cannot read file: {error}"
+  },
+  "running": {
+    "zh-CN": "工具已经运行。请点击 Codex 右上角的叠卡图标。",
+    "zh-TW": "工具已在執行。請點選 Codex 右上角的疊卡圖示。",
+    "en": "The tool is already running. Click the stacked-card icon near the top-right of Codex."
+  },
+  "startup_error": {
+    "zh-CN": "经验库启动失败",
+    "zh-TW": "經驗庫啟動失敗",
+    "en": "Procedure cards failed to start"
+  },
+  "description": {
+    "zh-CN": "中央 / 项目经验卡查看与回收站删除（正文只读）",
+    "zh-TW": "中央 / 專案經驗卡檢視與資源回收筒刪除（內文唯讀）",
+    "en": "View central/project procedure cards and recycle files (read-only text)"
+  },
+  "windows_only": {
+    "zh-CN": "此悬浮工具需要 Windows。",
+    "zh-TW": "此浮動工具需要 Windows。",
+    "en": "This floating tool requires Windows."
+  },
+  "cancel": {
+    "zh-CN": "取消",
+    "zh-TW": "取消",
+    "en": "Cancel"
+  },
+  "confirm_delete": {
+    "zh-CN": "移入回收站",
+    "zh-TW": "移至資源回收筒",
+    "en": "Move to Recycle Bin"
+  },
+  "absolute_project": {
+    "zh-CN": "输入项目根目录的完整路径。",
+    "zh-TW": "輸入專案根目錄的完整路徑。",
+    "en": "Enter the full path of the project root."
+  },
+  "native_wait": {
+    "zh-CN": "尚未在原生宿主中加载，请从经验卡插件入口打开。",
+    "zh-TW": "尚未在原生宿主中載入，請從經驗卡外掛入口開啟。",
+    "en": "Not connected to the native host. Open this panel from the Procedure cards plugin."
+  },
+  "host_timeout": {
+    "zh-CN": "宿主未及时响应，请重试。",
+    "zh-TW": "宿主未及時回應，請重試。",
+    "en": "The host did not respond. Please retry."
+  },
+  "no_tools": {
+    "zh-CN": "宿主尚未提供面板工具调用能力。",
+    "zh-TW": "宿主尚未提供面板工具呼叫能力。",
+    "en": "The host has not enabled panel tool calls."
+  },
+  "action_failed": {
+    "zh-CN": "操作未完成。",
+    "zh-TW": "操作未完成。",
+    "en": "The action was not completed."
+  },
+  "source_missing_option": {
+    "zh-CN": "来源：{project}（尚无项目库）",
+    "zh-TW": "來源：{project}（尚無專案庫）",
+    "en": "Source: {project} (no library yet)"
+  },
+  "source_library_missing": {
+    "zh-CN": "来源项目“{project}”尚无经验库。\n{path}\n不会自动创建，也未改选其他项目。",
+    "zh-TW": "來源專案「{project}」尚無經驗庫。\n{path}\n不會自動建立，也未改選其他專案。",
+    "en": "The source project “{project}” has no procedure library.\n{path}\nNo folder was created and no other project was selected."
+  },
+  "source_project": {
+    "zh-CN": "来源项目：{project}",
+    "zh-TW": "來源專案：{project}",
+    "en": "Source project: {project}"
+  },
+  "manual_missing": {
+    "zh-CN": "这个项目没有 procedures 经验库，请选择已有项目库的目录。",
+    "zh-TW": "這個專案沒有 procedures 經驗庫，請選擇已有專案庫的目錄。",
+    "en": "This project has no procedures library. Choose a folder with an existing library."
+  },
+  "current_library_missing": {
+    "zh-CN": "当前项目尚未创建项目库",
+    "zh-TW": "目前專案尚未建立專案庫",
+    "en": "This project has no library yet"
+  },
+  "create_library": {
+    "zh-CN": "创建项目库",
+    "zh-TW": "建立專案庫",
+    "en": "Create project library"
+  }
+}

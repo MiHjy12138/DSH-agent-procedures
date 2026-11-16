@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "procedure-library": {
+      "command": "node",
+      "args": [
+        "scripts/server.mjs"
+      ],
+      "cwd": ".",
+      "env_vars": [
+        "PATH",
+        "PATHEXT",
+        "SystemRoot",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "USERPROFILE",
+        "CODEX_HOME",
+        "TEMP",
+        "TMP"
+      ],
+      "tool_timeout_sec": 60
+    }
+  }
+}

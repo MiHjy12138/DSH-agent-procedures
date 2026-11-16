@@ -1,0 +1,18 @@
+{
+  "name": "procedure-library",
+  "version": "0.1.7",
+  "description": "Native central and project procedure-card panel with search and Windows Recycle Bin deletion.",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "经验卡",
+    "shortDescription": "中央与项目经验卡的原生侧栏",
+    "category": "Productivity",
+    "brandColor": "#4758D6",
+    "composerIcon": "./assets/logo.svg",
+    "logo": "./assets/logo.svg",
+    "defaultPrompt": [
+      "打开经验卡面板"
+    ]
+  },
+  "requires_local_executor": true
+}
