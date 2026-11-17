@@ -608,10 +608,10 @@ node tools/procedures-audit.mjs      # 静态：结构缺段、断链、体积�
 ### DeepSeek Harness：核心经验约定
 
 ```bash
-dsh plugin --profile tui add https://github.com/MiHjy12138/DSH-agent-procedures.git
+dsh plugin --profile YOUR_PROFILE add https://github.com/MiHjy12138/DSH-agent-procedures.git
 ```
 
-将 `tui` 换成你实际使用的 DSH profile 名称。DSH 插件通过官方 `systemPrompt` 服务注册现有的 `templates/AGENTS-snippet.md` 静态约定；不修改用户的 `AGENTS.md`，不创建工作区或卡库，不扫描卡片，不添加安装脚本、会话事件 hook、后台任务或模型调用。按前文需要时在工作区准备 `procedures/` 与模板即可。**插件接入与手工写入同一段 AGENTS 约定选一种**，避免重复注入。
+将 `YOUR_PROFILE` 替换为你实际使用的已有 DSH profile 名称；本次验证使用临时的 `tui` profile 及官方 `@deepseek-ai/dsh-base`。DSH 插件通过官方 `systemPrompt` 服务注册现有的 `templates/AGENTS-snippet.md` 静态约定；不修改用户的 `AGENTS.md`，不创建工作区或卡库，不扫描卡片，不添加安装脚本、会话事件 hook、后台任务或模型调用。按前文需要时在工作区准备 `procedures/` 与模板即可。**插件接入与手工写入同一段 AGENTS 约定选一种**，避免重复注入。
 
 这不是 DSH 图形卡片面板。`tools/` 中原有的 DSH 专属会话工具仍按前文单独使用，不会随插件自动运行。
 
