@@ -56,5 +56,5 @@ test('DSH bundle publishes its static guidance and original templates without ru
   }
   assert.ok(files.every(file => !file.startsWith('procedures/') && !file.startsWith('integrations/codex-library/')));
   const readme = await fs.readFile(new URL('README.md', root), 'utf8');
-  assert.ok(readme.includes('dsh plugin add https://github.com/MiHjy12138/DSH-agent-procedures.git'));
+  assert.ok(readme.includes('dsh plugin --profile tui add https://github.com/MiHjy12138/DSH-agent-procedures.git'));
 });
