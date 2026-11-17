@@ -1,0 +1,23 @@
+{
+  "name": "dsh-agent-procedures",
+  "interface": {
+    "displayName": "Agent procedures",
+    "shortDescription": "Community integrations for file-based procedure cards"
+  },
+  "plugins": [
+    {
+      "name": "procedure-library",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/Puipipi/DSH-agent-procedures.git",
+        "path": "integrations/codex-library/codex-plugin",
+        "ref": "codex-library",
+        "sha": "732ffe2f69307431256ec1dc0c747de92a55587d"
+      },
+      "interface": {
+        "displayName": "经验卡 · Codex",
+        "shortDescription": "Windows desktop panel maintained by Puipipi"
+      }
+    }
+  ]
+}
