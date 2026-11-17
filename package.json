@@ -1,0 +1,19 @@
+{
+  "name": "dsh-agent-procedures",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "integrations/dsh",
+    "templates",
+    "tools"
+  ],
+  "scripts": {
+    "test": "node --test tests/shared-install.test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./integrations/dsh/cordis.patch.yml"
+    }
+  }
+}

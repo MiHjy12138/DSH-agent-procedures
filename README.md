@@ -601,6 +601,35 @@ node tools/procedures-audit.mjs      # 静态：结构缺段、断链、体积�
 
 ---
 
+## Community integrations
+
+两个宿主都可以从本仓库的同一个 Git URL 安装；它们提供不同的接入方式，核心卡片格式不变。
+
+### DeepSeek Harness：核心经验约定
+
+```bash
+dsh plugin add https://github.com/MiHjy12138/DSH-agent-procedures.git
+```
+
+DSH 插件通过官方 `systemPrompt` 服务注册现有的 `templates/AGENTS-snippet.md` 静态约定；不修改用户的 `AGENTS.md`，不创建工作区或卡库，不扫描卡片，不添加安装脚本、会话事件 hook、后台任务或模型调用。按前文需要时在工作区准备 `procedures/` 与模板即可。**插件接入与手工写入同一段 AGENTS 约定选一种**，避免重复注入。
+
+这不是 DSH 图形卡片面板。`tools/` 中原有的 DSH 专属会话工具仍按前文单独使用，不会随插件自动运行。
+
+### Codex：可选的 Windows 经验卡面板
+
+Codex 可以从同一个上游仓库入口安装社区维护的桌面面板：
+
+```bash
+codex plugin marketplace add https://github.com/MiHjy12138/DSH-agent-procedures.git
+codex plugin add procedure-library@dsh-agent-procedures
+```
+
+需要 Windows、Node.js 22+（含 `node:sqlite`）、Windows PowerShell，以及支持原生 MCP App 页签的 Codex。安装后在聊天的 **Show tabs → New tab → More tools → 经验卡** 中打开。面板支持中央/项目经验卡搜索与纯文本阅读、显式创建当前项目的空库、打开目录和确认后移至 Windows 回收站。已有安装升级后需自行重启 Codex，才能让新会话加载更新的服务。
+
+本仓库只维护 [marketplace 索引](.agents/plugins/marketplace.json)。完整插件由 [Puipipi 在独立维护分支维护](https://github.com/Puipipi/DSH-agent-procedures/tree/codex-library/integrations/codex-library)，索引固定其 Git 提交；插件运行代码并非全部位于本上游仓库。Windows 操作和 Codex 本地项目元数据解析留在外部插件，不成为核心机制的依赖。插件不添加 skill、事件 hook、后台扫描或自动记卡；所有 MCP 工具仅向面板开放。
+
+本节不改变前文的通用手动接入方式或 DSH 专属会话工具。卸载面板可运行 `codex plugin remove procedure-library@dsh-agent-procedures`；卡文件保留。
+
 ## 授权
 
 MIT。拿去用，改了不用告诉我。
